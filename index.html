@@ -494,6 +494,10 @@
                 const percentage = parseInt(item.querySelector('.color-percentage').value);
                 colors.push({ color, percentage });
             });
+
+            // Sort by percentage in descending order (highest first)
+            colors.sort((a, b) => b.percentage - a.percentage);
+
             return colors;
         }
 
@@ -518,7 +522,7 @@
             const baseColor = document.getElementById('baseColor').value;
             const style = document.getElementById('style').value;
             const algorithm = document.getElementById('algorithm').value;
-            const colorData = getCamoColors();
+            const colorData = getCamoColors(); // Already sorted by percentage
 
             ctx.fillStyle = baseColor;
             ctx.fillRect(0, 0, width, height);
@@ -571,6 +575,7 @@
                     break;
             }
 
+            // Colors are already sorted by percentage (highest first)
             colorData.forEach((colorInfo, colorIndex) => {
                 ctx.fillStyle = colorInfo.color;
                 const percentageFactor = colorInfo.percentage / 100;
@@ -589,13 +594,11 @@
 
                     const blobSize = patternSize * sizeMultiplier * (0.7 + Math.random() * 0.8);
 
-                    // Draw smooth organic blob with Bezier curves
                     ctx.beginPath();
 
                     const numSegments = algorithm === 'spotted' ? 16 : (8 + Math.floor(Math.random() * 8));
                     const points = [];
 
-                    // Generate random points around center
                     for (let j = 0; j < numSegments; j++) {
                         const angle = (j / numSegments) * Math.PI * 2;
                         const radiusVariation = 0.4 + noise(j * 0.8, i * 0.3, colorIndex) * 1.2;
@@ -607,7 +610,6 @@
                         });
                     }
 
-                    // Draw with smooth Bezier curves
                     ctx.moveTo(points[0].x, points[0].y);
 
                     for (let j = 0; j < numSegments; j++) {
@@ -615,7 +617,6 @@
                         const next = points[(j + 1) % numSegments];
                         const afterNext = points[(j + 2) % numSegments];
 
-                        // Calculate control points for smooth curve
                         const cp1x = current.x + (next.x - current.x) * 0.5 + (Math.random() - 0.5) * blobSize * 0.2;
                         const cp1y = current.y + (next.y - current.y) * 0.5 + (Math.random() - 0.5) * blobSize * 0.2;
                         const cp2x = next.x - (afterNext.x - current.x) * 0.15;
@@ -627,7 +628,6 @@
                     ctx.closePath();
                     ctx.fill();
 
-                    // Layered algorithm adds overlapping blobs
                     if (algorithm === 'layered' && Math.random() > 0.5) {
                         const offsetX = x + (Math.random() - 0.5) * blobSize * 0.6;
                         const offsetY = y + (Math.random() - 0.5) * blobSize * 0.6;
@@ -676,6 +676,7 @@
                     break;
             }
 
+            // Colors are already sorted by percentage (highest first)
             // Layer 1: Large background shapes
             colorData.forEach((colorInfo, idx) => {
                 ctx.fillStyle = colorInfo.color;
@@ -694,7 +695,6 @@
 
                     const size = patternSize * (2.5 + Math.random() * 3);
 
-                    // Large elongated organic shape
                     ctx.beginPath();
                     const points = 6 + Math.floor(Math.random() * 4);
                     for (let j = 0; j < points; j++) {
@@ -813,6 +813,7 @@
                     break;
             }
 
+            // Colors are already sorted by percentage (highest first)
             // Layer 1: Large irregular base shapes
             colorData.slice(0, 2).forEach((colorInfo, idx) => {
                 ctx.fillStyle = colorInfo.color;
@@ -997,6 +998,7 @@
 
             let densityMultiplier = algorithm === 'dense' ? 2.0 : (algorithm === 'sparse' ? 0.6 : 1.2);
 
+            // Colors are already sorted by percentage (highest first)
             colorData.forEach((colorInfo, colorIndex) => {
                 ctx.fillStyle = colorInfo.color;
                 const percentageFactor = colorInfo.percentage / 100;
@@ -1067,6 +1069,7 @@
             const scale = Math.max(1, Math.floor(patternSize / 50));
             const noiseScale = algorithm === 'noise' ? 0.05 : 0.1;
 
+            // Colors are already sorted by percentage (highest first)
             const expandedColors = [];
             colorData.forEach(colorInfo => {
                 const count = Math.floor(colorInfo.percentage);
@@ -1126,6 +1129,7 @@
             const imgWidth = patternSize;
             const imgHeight = patternSize * (patternImage.height / patternImage.width);
 
+            // Colors are already sorted by percentage (highest first)
             const expandedColors = [];
             colorData.forEach(colorInfo => {
                 const count = Math.floor(colorInfo.percentage / 10);
