@@ -89,6 +89,20 @@
             font-size: 10px;
             color: #666;
         }
+        .color-item .overlay-control {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 60px;
+            margin-top: 3px;
+        }
+        .color-item .overlay-control input {
+            width: 100%;
+        }
+        .color-item .overlay-control small {
+            font-size: 9px;
+            color: #666;
+        }
         .image-preview {
             width: 100%;
             height: 150px;
@@ -222,9 +236,9 @@
                         <small class="text-muted">0% = Angular/Sharp, 100% = Liquid-Like/Very Round</small>
                     </div>
 
-                    <!-- Camo Colors - Horizontal with Percentage -->
+                    <!-- Camo Colors - Horizontal with Percentage and Overlay -->
                     <div class="mb-3">
-                        <label class="form-label">Camo Colors (hex + percentage)</label>
+                        <label class="form-label">Camo Colors (hex + percentage + overlay)</label>
                         <div class="color-inputs-container" id="colorInputs">
                             <div class="color-item">
                                 <input type="color" class="camo-color" value="#3d5a3d" onchange="updateHexInput(this)">
@@ -232,6 +246,10 @@
                                 <div class="percentage-control">
                                     <input type="range" class="color-percentage" min="1" max="100" value="33">
                                     <small><span class="percentage-value">33</span>%</small>
+                                </div>
+                                <div class="overlay-control">
+                                    <input type="range" class="color-overlay" min="0" max="100" value="100">
+                                    <small>Opacity: <span class="overlay-value">100</span>%</small>
                                 </div>
                                 <button class="btn btn-sm btn-danger" onclick="removeColor(this)">×</button>
                             </div>
@@ -242,6 +260,10 @@
                                     <input type="range" class="color-percentage" min="1" max="100" value="33">
                                     <small><span class="percentage-value">33</span>%</small>
                                 </div>
+                                <div class="overlay-control">
+                                    <input type="range" class="color-overlay" min="0" max="100" value="100">
+                                    <small>Opacity: <span class="overlay-value">100</span>%</small>
+                                </div>
                                 <button class="btn btn-sm btn-danger" onclick="removeColor(this)">×</button>
                             </div>
                             <div class="color-item">
@@ -250,6 +272,10 @@
                                 <div class="percentage-control">
                                     <input type="range" class="color-percentage" min="1" max="100" value="34">
                                     <small><span class="percentage-value">34</span>%</small>
+                                </div>
+                                <div class="overlay-control">
+                                    <input type="range" class="color-overlay" min="0" max="100" value="100">
+                                    <small>Opacity: <span class="overlay-value">100</span>%</small>
                                 </div>
                                 <button class="btn btn-sm btn-danger" onclick="removeColor(this)">×</button>
                             </div>
@@ -289,163 +315,197 @@
 
         // Preset configurations
         const presets = {
+            // US Military Patterns
             'ucp': {
                 baseColor: '#B5AC98',
                 colors: ['#9C9482', '#8A8776', '#AFA893', '#C7BFA7'],
                 percentages: [25, 25, 25, 25],
+                overlays: [100, 100, 100, 100],
                 style: 'digital'
             },
             'ocp': {
                 baseColor: '#A68B60',
                 colors: ['#8D7649', '#B39C6E', '#6A5C3E', '#D4C4A0'],
                 percentages: [25, 25, 25, 25],
+                overlays: [100, 100, 100, 100],
                 style: 'multicam-crye'
             },
             'marpat-woodland': {
                 baseColor: '#6B7C54',
                 colors: ['#5A6B4A', '#3D4E2F', '#7C8F6B', '#4A5F3A'],
                 percentages: [25, 25, 25, 25],
+                overlays: [100, 100, 100, 100],
                 style: 'digital'
             },
             'marpat-desert': {
                 baseColor: '#C9B590',
                 colors: ['#B5A079', '#D4C4A0', '#A68B60', '#8D7649'],
                 percentages: [25, 25, 25, 25],
+                overlays: [100, 100, 100, 100],
                 style: 'digital'
             },
             'aor1': {
                 baseColor: '#D9C7A8',
                 colors: ['#C4B090', '#E5D5B5', '#B09875', '#A08560'],
                 percentages: [25, 25, 25, 25],
+                overlays: [100, 100, 100, 100],
                 style: 'digital'
             },
             'aor2': {
                 baseColor: '#798C75',
                 colors: ['#5F7A5C', '#8B9E88', '#4A5F47', '#6D8269'],
                 percentages: [25, 25, 25, 25],
+                overlays: [100, 100, 100, 100],
                 style: 'digital'
             },
             'm81-woodland': {
                 baseColor: '#7C8F6B',
                 colors: ['#4A5F3A', '#3D4E2F', '#6B7C54', '#654321'],
                 percentages: [30, 25, 25, 20],
+                overlays: [100, 100, 100, 100],
                 style: 'organic'
             },
             'tricolor-desert': {
                 baseColor: '#D4C4A0',
                 colors: ['#C9B590', '#B5A079', '#A68B60'],
                 percentages: [35, 35, 30],
+                overlays: [100, 100, 100],
                 style: 'organic'
             },
+
+            // German Patterns
             'flecktarn': {
                 baseColor: '#7C8F6B',
                 colors: ['#4A5F3A', '#6B7C54', '#3D3D2F', '#8B9A7A', '#654321'],
                 percentages: [25, 22, 20, 18, 15],
+                overlays: [100, 100, 100, 100, 100],
                 style: 'organic'
             },
             'tropentarn': {
                 baseColor: '#C9B590',
                 colors: ['#B5A079', '#A68B60', '#8D7649', '#654321'],
                 percentages: [30, 25, 25, 20],
+                overlays: [100, 100, 100, 100],
                 style: 'organic'
             },
             'splittertarn': {
                 baseColor: '#9AA88B',
                 colors: ['#7C8F6B', '#6B7C54', '#4A5F3A', '#654321'],
                 percentages: [30, 25, 25, 20],
+                overlays: [100, 100, 100, 100],
                 style: 'multi-terrain'
             },
             'eichenlaubmuster': {
                 baseColor: '#8B9478',
                 colors: ['#6B7C54', '#5A6B4A', '#4A5F3A', '#3D4E2F'],
                 percentages: [30, 25, 25, 20],
+                overlays: [100, 100, 100, 100],
                 style: 'treeleaf'
             },
             'platanenmuster': {
                 baseColor: '#9AA88B',
                 colors: ['#7C8F6B', '#6B7C54', '#5A6B4A', '#4A5F3A'],
                 percentages: [28, 26, 24, 22],
+                overlays: [100, 100, 100, 100],
                 style: 'organic'
             },
             'sumpftarn': {
                 baseColor: '#6B7C5A',
                 colors: ['#5A6B4A', '#4A5F3A', '#3D4E2F', '#2F3D2F'],
                 percentages: [30, 25, 25, 20],
+                overlays: [100, 100, 100, 100],
                 style: 'organic'
             },
+
+            // General patterns
             woodland: {
                 baseColor: '#8B7355',
                 colors: ['#3d5a3d', '#6b8e23', '#2f4f2f', '#654321'],
                 percentages: [30, 25, 25, 20],
+                overlays: [100, 100, 100, 100],
                 style: 'organic'
             },
             desert: {
                 baseColor: '#EDC9AF',
                 colors: ['#C2B280', '#967969', '#F4A460', '#DEB887'],
                 percentages: [30, 25, 25, 20],
+                overlays: [100, 100, 100, 100],
                 style: 'organic'
             },
             urban: {
                 baseColor: '#808080',
                 colors: ['#696969', '#A9A9A9', '#2F4F4F', '#DCDCDC'],
                 percentages: [25, 25, 25, 25],
+                overlays: [100, 100, 100, 100],
                 style: 'organic'
             },
             digital: {
                 baseColor: '#7A8B8B',
                 colors: ['#556B2F', '#8FBC8F', '#2F4F4F', '#A9A9A9'],
                 percentages: [30, 25, 25, 20],
+                overlays: [100, 100, 100, 100],
                 style: 'digital'
             },
             multicam: {
                 baseColor: '#AA9A7C',
                 colors: ['#877C5F', '#C4B89E', '#5C5446', '#9B8B6F', '#6B5D52', '#D4C8B0'],
                 percentages: [20, 18, 22, 15, 15, 10],
+                overlays: [100, 80, 100, 90, 100, 70],
                 style: 'multicam-crye'
             },
             navy: {
                 baseColor: '#4A5F7F',
                 colors: ['#1C2841', '#2C3E50', '#34495E', '#607D8B'],
                 percentages: [30, 25, 25, 20],
+                overlays: [100, 100, 100, 100],
                 style: 'organic'
             },
+
+            // Russian patterns
             flora: {
                 baseColor: '#7C8F6B',
                 colors: ['#4A5F3A', '#6B7C54', '#3D4E2F', '#8B9A7A'],
                 percentages: [35, 30, 20, 15],
+                overlays: [100, 100, 100, 100],
                 style: 'organic'
             },
             partizan: {
                 baseColor: '#8B9478',
                 colors: ['#5A6B4A', '#4A3D2F', '#7C8F6B', '#3D3D2F'],
                 percentages: [30, 25, 25, 20],
+                overlays: [100, 100, 100, 100],
                 style: 'organic'
             },
             surpat: {
                 baseColor: '#6B7C5A',
                 colors: ['#4A5F3A', '#8B9A7A', '#3D4E2F', '#5A6B4A'],
                 percentages: [35, 30, 20, 15],
+                overlays: [100, 100, 100, 100],
                 style: 'organic'
             },
             kamysh: {
                 baseColor: '#9AA88B',
                 colors: ['#7C8F6B', '#6B7C54', '#8B9A7A', '#4A5F3A'],
                 percentages: [30, 25, 25, 20],
+                overlays: [100, 100, 100, 100],
                 style: 'treeleaf'
             },
             emc: {
                 baseColor: '#7C8F6B',
                 colors: ['#4A5F3A', '#6B7C54', '#3D4E2F', '#8B9A7A'],
                 percentages: [30, 25, 25, 20],
+                overlays: [100, 100, 100, 100],
                 style: 'digital'
             }
         };
 
+        // Update hex input when color picker changes
         function updateHexInput(colorPicker) {
             const hexInput = colorPicker.parentElement.querySelector('.hex-input');
             hexInput.value = colorPicker.value;
         }
 
+        // Update color picker when hex input changes
         function updateColorPicker(hexInput) {
             const colorPicker = hexInput.parentElement.querySelector('.camo-color');
             if (/^#[0-9A-F]{6}$/i.test(hexInput.value)) {
@@ -453,13 +513,19 @@
             }
         }
 
+        // Update percentage and overlay displays
         document.addEventListener('input', function(e) {
             if (e.target.classList.contains('color-percentage')) {
                 const valueSpan = e.target.parentElement.querySelector('.percentage-value');
                 valueSpan.textContent = e.target.value;
             }
+            if (e.target.classList.contains('color-overlay')) {
+                const valueSpan = e.target.parentElement.querySelector('.overlay-value');
+                valueSpan.textContent = e.target.value;
+            }
         });
 
+        // Handle preset selection
         document.getElementById('preset').addEventListener('change', function() {
             const presetValue = this.value;
             if (presetValue !== 'custom' && presets[presetValue]) {
@@ -470,13 +536,15 @@
                 const colorInputsDiv = document.getElementById('colorInputs');
                 colorInputsDiv.innerHTML = '';
                 preset.colors.forEach((color, index) => {
-                    addColorInput(color, preset.percentages[index]);
+                    addColorInput(color, preset.percentages[index], preset.overlays[index]);
                 });
 
+                // Trigger style change to show/hide controls
                 document.getElementById('style').dispatchEvent(new Event('change'));
             }
         });
 
+        // Handle style visibility
         document.getElementById('style').addEventListener('change', function() {
             const style = this.value;
             document.getElementById('pixelSizeGroup').style.display = 
@@ -489,6 +557,7 @@
                 (style === 'organic' || style === 'multi-terrain' || style === 'multicam-crye') ? 'block' : 'none';
         });
 
+        // Image upload handler
         document.getElementById('imageUpload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -507,10 +576,10 @@
         });
 
         function addColor() {
-            addColorInput('#000000', 20);
+            addColorInput('#000000', 20, 100);
         }
 
-        function addColorInput(color = '#000000', percentage = 20) {
+        function addColorInput(color = '#000000', percentage = 20, overlay = 100) {
             const colorInputsDiv = document.getElementById('colorInputs');
             const div = document.createElement('div');
             div.className = 'color-item';
@@ -520,6 +589,10 @@
                 <div class="percentage-control">
                     <input type="range" class="color-percentage" min="1" max="100" value="${percentage}">
                     <small><span class="percentage-value">${percentage}</span>%</small>
+                </div>
+                <div class="overlay-control">
+                    <input type="range" class="color-overlay" min="0" max="100" value="${overlay}">
+                    <small>Opacity: <span class="overlay-value">${overlay}</span>%</small>
                 </div>
                 <button class="btn btn-sm btn-danger" onclick="removeColor(this)">×</button>
             `;
@@ -536,11 +609,12 @@
             colorItems.forEach(item => {
                 const color = item.querySelector('.camo-color').value;
                 const percentage = parseInt(item.querySelector('.color-percentage').value);
-                colors.push({ color, percentage });
+                const overlay = parseInt(item.querySelector('.color-overlay').value);
+                colors.push({ color, percentage, overlay });
             });
 
-            // Sort by percentage in ASCENDING order (lowest first, highest last)
-            colors.sort((a, b) => a.percentage - b.percentage);
+            // Sort by overlay in descending order (highest overlay renders first)
+            colors.sort((a, b) => b.overlay - a.overlay);
 
             return colors;
         }
@@ -566,7 +640,7 @@
             const baseColor = document.getElementById('baseColor').value;
             const style = document.getElementById('style').value;
             const algorithm = document.getElementById('algorithm').value;
-            const colorData = getCamoColors(); // Sorted LOWEST to HIGHEST percentage
+            const colorData = getCamoColors(); // Already sorted by overlay
 
             ctx.fillStyle = baseColor;
             ctx.fillRect(0, 0, width, height);
@@ -620,9 +694,10 @@
                     break;
             }
 
-            // Colors sorted LOWEST to HIGHEST - small percentages render first (bottom)
             colorData.forEach((colorInfo, colorIndex) => {
                 ctx.fillStyle = colorInfo.color;
+                ctx.globalAlpha = colorInfo.overlay / 100;
+
                 const percentageFactor = colorInfo.percentage / 100;
                 const numBlobs = Math.floor((width * height) / (patternSize * patternSize * 1.5) * percentageFactor * densityMultiplier);
 
@@ -732,6 +807,8 @@
                     }
                 }
             });
+
+            ctx.globalAlpha = 1.0;
         }
 
         function generateMultiCamCryeCamo(colorData, algorithm) {
@@ -753,11 +830,10 @@
                     break;
             }
 
-            // Colors sorted LOWEST to HIGHEST
-            // Layer 1: Use first 2 colors (smallest percentages)
+            // Layer 1: Large irregular liquid-like base shapes
             colorData.slice(0, 2).forEach((colorInfo, idx) => {
                 ctx.fillStyle = colorInfo.color;
-                ctx.globalAlpha = 0.8;
+                ctx.globalAlpha = (colorInfo.overlay / 100) * 0.8;
 
                 const numShapes = Math.floor((width * height) / (patternSize * patternSize * 8) * (colorInfo.percentage / 100) * densityMultiplier);
 
@@ -824,9 +900,10 @@
 
             ctx.globalAlpha = 1.0;
 
-            // Layer 2: Next 2 colors
+            // Layer 2: Medium organic liquid blobs
             colorData.slice(2, 4).forEach((colorInfo, idx) => {
                 ctx.fillStyle = colorInfo.color;
+                ctx.globalAlpha = colorInfo.overlay / 100;
 
                 const numBlobs = Math.floor((width * height) / (patternSize * patternSize * 3) * (colorInfo.percentage / 100) * densityMultiplier);
 
@@ -882,7 +959,7 @@
                     ctx.fill();
 
                     if (Math.random() > 0.5) {
-                        ctx.globalAlpha = 0.6;
+                        ctx.globalAlpha = (colorInfo.overlay / 100) * 0.6;
                         const numDots = 3 + Math.floor(Math.random() * 5);
                         for (let d = 0; d < numDots; d++) {
                             const dotAngle = Math.random() * Math.PI * 2;
@@ -898,16 +975,17 @@
                             );
                             ctx.fill();
                         }
-                        ctx.globalAlpha = 1.0;
+                        ctx.globalAlpha = colorInfo.overlay / 100;
                     }
                 }
             });
 
-            // Layer 3: Remaining colors (highest percentages - render last on top)
+            // Layer 3: Small detailed round spots
             const detailColors = colorData.length > 4 ? colorData.slice(4) : colorData.slice(0, 2);
 
             detailColors.forEach((colorInfo, idx) => {
                 ctx.fillStyle = colorInfo.color;
+                ctx.globalAlpha = colorInfo.overlay / 100;
 
                 const numSpots = Math.floor((width * height) / (patternSize * patternSize * 1.5) * (colorInfo.percentage / 100) * densityMultiplier * 1.5);
 
@@ -916,7 +994,8 @@
                     const y = Math.random() * height;
                     const size = patternSize * (0.15 + Math.random() * 0.35);
 
-                    ctx.globalAlpha = 0.7 + Math.random() * 0.3;
+                    const localAlpha = (0.7 + Math.random() * 0.3) * (colorInfo.overlay / 100);
+                    ctx.globalAlpha = localAlpha;
 
                     if (curvyPercent > 0.5 || Math.random() > 0.5) {
                         ctx.beginPath();
@@ -942,6 +1021,7 @@
 
             ctx.globalAlpha = 1.0;
 
+            // Layer 4: Fine texture overlay with soft edges
             if (algorithm === 'layered' || algorithm === 'dense') {
                 colorData.forEach(colorInfo => {
                     ctx.fillStyle = colorInfo.color;
@@ -952,7 +1032,7 @@
                         const y = Math.random() * height;
                         const size = patternSize * (0.03 + Math.random() * 0.08);
 
-                        ctx.globalAlpha = 0.3 + Math.random() * 0.4;
+                        ctx.globalAlpha = (0.3 + Math.random() * 0.4) * (colorInfo.overlay / 100);
                         ctx.beginPath();
                         ctx.arc(x, y, size, 0, Math.PI * 2);
                         ctx.fill();
@@ -982,9 +1062,11 @@
                     break;
             }
 
-            // Colors sorted LOWEST to HIGHEST - renders smallest first
+            // Layer 1: Large background shapes
             colorData.forEach((colorInfo, idx) => {
                 ctx.fillStyle = colorInfo.color;
+                ctx.globalAlpha = colorInfo.overlay / 100;
+
                 const percentageFactor = colorInfo.percentage / 100;
                 const numLargeShapes = Math.floor((width * height) / (patternSize * patternSize * 5) * percentageFactor * densityMultiplier * 0.6);
 
@@ -1041,8 +1123,11 @@
                 }
             });
 
+            // Layer 2: Medium irregular blobs
             colorData.forEach((colorInfo, idx) => {
                 ctx.fillStyle = colorInfo.color;
+                ctx.globalAlpha = colorInfo.overlay / 100;
+
                 const percentageFactor = colorInfo.percentage / 100;
                 const numMediumShapes = Math.floor((width * height) / (patternSize * patternSize * 2.5) * percentageFactor * densityMultiplier);
 
@@ -1093,9 +1178,12 @@
                 }
             });
 
+            // Layer 3: Small detail shapes
             if (algorithm === 'layered' || algorithm === 'dense') {
                 colorData.forEach((colorInfo) => {
                     ctx.fillStyle = colorInfo.color;
+                    ctx.globalAlpha = colorInfo.overlay / 100;
+
                     const percentageFactor = colorInfo.percentage / 100;
                     const numSmall = Math.floor((width * height) / (patternSize * patternSize) * percentageFactor * densityMultiplier * 0.8);
 
@@ -1120,6 +1208,8 @@
                     }
                 });
             }
+
+            ctx.globalAlpha = 1.0;
         }
 
         function generateTreeLeafCamo(colorData, algorithm) {
@@ -1131,6 +1221,8 @@
 
             colorData.forEach((colorInfo, colorIndex) => {
                 ctx.fillStyle = colorInfo.color;
+                ctx.globalAlpha = colorInfo.overlay / 100;
+
                 const percentageFactor = colorInfo.percentage / 100;
                 const numLeaves = Math.floor((width * height) / (patternSize * patternSize * 1.2) * percentageFactor * densityMultiplier);
 
@@ -1188,6 +1280,8 @@
                     ctx.restore();
                 }
             });
+
+            ctx.globalAlpha = 1.0;
         }
 
         function generateDigitalCamo(colorData, algorithm) {
@@ -1203,7 +1297,7 @@
             colorData.forEach(colorInfo => {
                 const count = Math.floor(colorInfo.percentage);
                 for (let i = 0; i < count; i++) {
-                    expandedColors.push(colorInfo.color);
+                    expandedColors.push({ color: colorInfo.color, overlay: colorInfo.overlay });
                 }
             });
 
@@ -1232,7 +1326,9 @@
                     }
 
                     if (shouldDraw) {
-                        ctx.fillStyle = expandedColors[colorIndex];
+                        const selectedColor = expandedColors[colorIndex];
+                        ctx.fillStyle = selectedColor.color;
+                        ctx.globalAlpha = selectedColor.overlay / 100;
 
                         if (Math.random() > 0.8 && algorithm !== 'spotted') {
                             ctx.fillRect(x, y, pixelSize * 2, pixelSize * 2);
@@ -1242,6 +1338,8 @@
                     }
                 }
             }
+
+            ctx.globalAlpha = 1.0;
         }
 
         function generateImagePatternCamo(colorData) {
@@ -1262,15 +1360,15 @@
             colorData.forEach(colorInfo => {
                 const count = Math.floor(colorInfo.percentage / 10);
                 for (let i = 0; i < count; i++) {
-                    expandedColors.push(colorInfo.color);
+                    expandedColors.push({ color: colorInfo.color, overlay: colorInfo.overlay });
                 }
             });
 
             for (let x = 0; x < width; x += imgWidth + spacing) {
                 for (let y = 0; y < height; y += imgHeight + spacing) {
-                    const color = expandedColors[Math.floor(Math.random() * expandedColors.length)];
-                    ctx.globalAlpha = 0.6;
-                    ctx.fillStyle = color;
+                    const selectedColor = expandedColors[Math.floor(Math.random() * expandedColors.length)];
+                    ctx.globalAlpha = (selectedColor.overlay / 100) * 0.6;
+                    ctx.fillStyle = selectedColor.color;
                     ctx.fillRect(x, y, imgWidth, imgHeight);
 
                     ctx.globalAlpha = 1.0;
@@ -1279,6 +1377,7 @@
             }
         }
 
+        // Initial generation
         generateCamo();
     </script>
 
