@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camouflage Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        #camoCanvas {
+            border: 2px solid #dee2e6;
+            background: white;
+            max-width: 100%;
+            height: auto;
+        }
+        .canvas-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .config-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+        .color-inputs-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .color-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .color-item input[type="color"] {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .color-item button {
+            width: 60px;
+        }
+        .image-preview {
+            width: 100%;
+            height: 150px;
+            border: 2px dashed #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+            background: #f8f9fa;
+            overflow: hidden;
+        }
+        .image-preview img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">🎨 Camouflage Pattern Generator</span>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-3">
+        <div class="row">
+            <!-- Left Panel - Canvas Display -->
+            <div class="col-lg-8 mb-3">
+                <div class="canvas-container">
+                    <canvas id="camoCanvas" width="800" height="600"></canvas>
+                </div>
+            </div>
+
+            <!-- Right Panel - Configuration -->
+            <div class="col-lg-4">
+                <div class="config-panel">
+                    <h5 class="mb-3">Configuration</h5>
+
+                    <!-- Preset -->
+                    <div class="mb-3">
+                        <label class="form-label">Preset</label>
+                        <select class="form-select" id="preset">
+                            <option value="custom">Custom</option>
+                            <option value="woodland">Woodland</option>
+                            <option value="desert">Desert</option>
+                            <option value="urban">Urban</option>
+                            <option value="digital">Digital</option>
+                            <option value="multicam">MultiCam</option>
+                            <option value="navy">Navy Blue</option>
+                        </select>
+                    </div>
+
+                    <!-- Base Color -->
+                    <div class="mb-3">
+                        <label class="form-label">Base Color</label>
+                        <input type="color" class="form-control form-control-color" id="baseColor" value="#8B7355">
+                    </div>
+
+                    <!-- Style -->
+                    <div class="mb-3">
+                        <label class="form-label">Style</label>
+                        <select class="form-select" id="style">
+                            <option value="organic">Organic Curve</option>
+                            <option value="digital">Digitalize</option>
+                            <option value="multi-terrain">Multi-Terrain</option>
+                            <option value="image">Image Pattern</option>
+                        </select>
+                    </div>
+
+                    <!-- Dimensions -->
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Width</label>
+                            <input type="number" class="form-control" id="width" value="800" min="100" max="2000">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Height</label>
+                            <input type="number" class="form-control" id="height" value="600" min="100" max="2000">
+                        </div>
+                    </div>
+
+                    <!-- Pattern Size -->
+                    <div class="mb-3">
+                        <label class="form-label">Pattern Size: <span id="patternSizeValue">50</span></label>
+                        <input type="range" class="form-range" id="patternSize" min="10" max="200" value="50" oninput="document.getElementById('patternSizeValue').textContent = this.value">
+                    </div>
+
+                    <!-- Camo Colors - Horizontal -->
+                    <div class="mb-3">
+                        <label class="form-label">Camo Colors</label>
+                        <div class="color-inputs-container" id="colorInputs">
+                            <div class="color-item">
+                                <input type="color" class="camo-color" value="#3d5a3d">
+                                <button class="btn btn-sm btn-danger" onclick="removeColor(this)">×</button>
+                            </div>
+                            <div class="color-item">
+                                <input type="color" class="camo-color" value="#6b8e23">
+                                <button class="btn btn-sm btn-danger" onclick="removeColor(this)">×</button>
+                            </div>
+                            <div class="color-item">
+                                <input type="color" class="camo-color" value="#2f4f2f">
+                                <button class="btn btn-sm btn-danger" onclick="removeColor(this)">×</button>
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-success" onclick="addColor()">+ Add Color</button>
+                    </div>
+
+                    <!-- Digital Pixel Size -->
+                    <div class="mb-3" id="pixelSizeGroup">
+                        <label class="form-label">Digital Pixel Size: <span id="pixelSizeValue">10</span>px</label>
+                        <input type="range" class="form-range" id="pixelSize" min="5" max="50" value="10" oninput="document.getElementById('pixelSizeValue').textContent = this.value">
+                    </div>
+
+                    <!-- Image Pattern Upload -->
+                    <div class="mb-3" id="imageUploadGroup">
+                        <label class="form-label">Image Pattern</label>
+                        <input type="file" class="form-control" id="imageUpload" accept="image/*">
+                        <div class="image-preview" id="imagePreview">
+                            <span class="text-muted">No image selected</span>
+                        </div>
+                    </div>
+
+                    <!-- Image Spacing -->
+                    <div class="mb-3" id="imageSpacingGroup">
+                        <label class="form-label">Image Spacing: <span id="imageSpacingValue">20</span>px</label>
+                        <input type="range" class="form-range" id="imageSpacing" min="0" max="100" value="20" oninput="document.getElementById('imageSpacingValue').textContent = this.value">
+                    </div>
+
+                    <!-- Generate Button -->
+                    <button class="btn btn-primary w-100" onclick="generateCamo()">Generate Camouflage</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let canvas = document.getElementById('camoCanvas');
+        let ctx = canvas.getContext('2d');
+        let patternImage = null;
+
+        // Preset configurations
+        const presets = {
+            woodland: {
+                baseColor: '#8B7355',
+                colors: ['#3d5a3d', '#6b8e23', '#2f4f2f', '#654321'],
+                style: 'organic'
+            },
+            desert: {
+                baseColor: '#EDC9AF',
+                colors: ['#C2B280', '#967969', '#F4A460', '#DEB887'],
+                style: 'organic'
+            },
+            urban: {
+                baseColor: '#808080',
+                colors: ['#696969', '#A9A9A9', '#2F4F4F', '#DCDCDC'],
+                style: 'organic'
+            },
+            digital: {
+                baseColor: '#7A8B8B',
+                colors: ['#556B2F', '#8FBC8F', '#2F4F4F', '#A9A9A9'],
+                style: 'digital'
+            },
+            multicam: {
+                baseColor: '#AA9A7C',
+                colors: ['#877C5F', '#C4B89E', '#5C5446', '#9B8B6F'],
+                style: 'multi-terrain'
+            },
+            navy: {
+                baseColor: '#4A5F7F',
+                colors: ['#1C2841', '#2C3E50', '#34495E', '#607D8B'],
+                style: 'organic'
+            }
+        };
+
+        // Handle preset selection
+        document.getElementById('preset').addEventListener('change', function() {
+            const presetValue = this.value;
+            if (presetValue !== 'custom' && presets[presetValue]) {
+                const preset = presets[presetValue];
+                document.getElementById('baseColor').value = preset.baseColor;
+                document.getElementById('style').value = preset.style;
+
+                // Update colors
+                const colorInputsDiv = document.getElementById('colorInputs');
+                colorInputsDiv.innerHTML = '';
+                preset.colors.forEach(color => {
+                    addColorInput(color);
+                });
+            }
+        });
+
+        // Handle style visibility
+        document.getElementById('style').addEventListener('change', function() {
+            const style = this.value;
+            document.getElementById('pixelSizeGroup').style.display = 
+                (style === 'digital') ? 'block' : 'none';
+            document.getElementById('imageUploadGroup').style.display = 
+                (style === 'image') ? 'block' : 'none';
+            document.getElementById('imageSpacingGroup').style.display = 
+                (style === 'image') ? 'block' : 'none';
+        });
+
+        // Image upload handler
+        document.getElementById('imageUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        patternImage = img;
+                        document.getElementById('imagePreview').innerHTML = '';
+                        document.getElementById('imagePreview').appendChild(img);
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function addColor() {
+            addColorInput('#000000');
+        }
+
+        function addColorInput(color = '#000000') {
+            const colorInputsDiv = document.getElementById('colorInputs');
+            const div = document.createElement('div');
+            div.className = 'color-item';
+            div.innerHTML = `
+                <input type="color" class="camo-color" value="${color}">
+                <button class="btn btn-sm btn-danger" onclick="removeColor(this)">×</button>
+            `;
+            colorInputsDiv.appendChild(div);
+        }
+
+        function removeColor(btn) {
+            btn.parentElement.remove();
+        }
+
+        function getCamoColors() {
+            const colorInputs = document.querySelectorAll('.camo-color');
+            return Array.from(colorInputs).map(input => input.value);
+        }
+
+        function generateCamo() {
+            // Update canvas size
+            const width = parseInt(document.getElementById('width').value);
+            const height = parseInt(document.getElementById('height').value);
+            canvas.width = width;
+            canvas.height = height;
+
+            // Get configuration
+            const baseColor = document.getElementById('baseColor').value;
+            const style = document.getElementById('style').value;
+            const colors = getCamoColors();
+
+            // Fill base color
+            ctx.fillStyle = baseColor;
+            ctx.fillRect(0, 0, width, height);
+
+            // Generate pattern based on style
+            switch(style) {
+                case 'organic':
+                    generateOrganicCamo(colors);
+                    break;
+                case 'digital':
+                    generateDigitalCamo(colors);
+                    break;
+                case 'multi-terrain':
+                    generateMultiTerrainCamo(colors);
+                    break;
+                case 'image':
+                    generateImagePatternCamo(colors);
+                    break;
+            }
+        }
+
+        function generateOrganicCamo(colors) {
+            const width = canvas.width;
+            const height = canvas.height;
+            const patternSize = parseInt(document.getElementById('patternSize').value);
+
+            // Generate smooth, flowing camouflage patterns
+            colors.forEach((color, colorIndex) => {
+                ctx.fillStyle = color;
+                const numBlobs = Math.floor((width * height) / (patternSize * patternSize * 2));
+
+                for (let i = 0; i < numBlobs; i++) {
+                    const x = Math.random() * (width + patternSize * 2) - patternSize;
+                    const y = Math.random() * (height + patternSize * 2) - patternSize;
+
+                    // Create organic blob using bezier curves
+                    ctx.beginPath();
+                    const points = 6 + Math.floor(Math.random() * 4); // 6-9 control points
+                    const angleStep = (Math.PI * 2) / points;
+
+                    for (let j = 0; j <= points; j++) {
+                        const angle = j * angleStep;
+                        const nextAngle = (j + 1) * angleStep;
+
+                        // Randomize radius for organic shape
+                        const radiusVar = 0.6 + Math.random() * 0.8;
+                        const radius = patternSize * radiusVar;
+                        const nextRadiusVar = 0.6 + Math.random() * 0.8;
+                        const nextRadius = patternSize * nextRadiusVar;
+
+                        const px = x + Math.cos(angle) * radius;
+                        const py = y + Math.sin(angle) * radius;
+                        const npx = x + Math.cos(nextAngle) * nextRadius;
+                        const npy = y + Math.sin(nextAngle) * nextRadius;
+
+                        if (j === 0) {
+                            ctx.moveTo(px, py);
+                        } else {
+                            // Control points for smooth curves
+                            const cp1x = x + Math.cos(angle - angleStep * 0.5) * radius * 1.2;
+                            const cp1y = y + Math.sin(angle - angleStep * 0.5) * radius * 1.2;
+                            const cp2x = x + Math.cos(angle + angleStep * 0.5) * radius * 1.2;
+                            const cp2y = y + Math.sin(angle + angleStep * 0.5) * radius * 1.2;
+
+                            ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, npx, npy);
+                        }
+                    }
+
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Add some transparency variation for depth
+                    if (Math.random() > 0.7) {
+                        ctx.globalAlpha = 0.5;
+                        ctx.fill();
+                        ctx.globalAlpha = 1.0;
+                    }
+                }
+            });
+        }
+
+        function generateDigitalCamo(colors) {
+            const pixelSize = parseInt(document.getElementById('pixelSize').value);
+            const patternSize = parseInt(document.getElementById('patternSize').value);
+            const width = canvas.width;
+            const height = canvas.height;
+
+            // Create digital camo with clustered pixels
+            const scale = Math.max(1, Math.floor(patternSize / 50));
+            const clusterSize = pixelSize * scale;
+
+            // Use Perlin-like noise for better clustering
+            const noiseScale = 0.1;
+
+            for (let x = 0; x < width; x += pixelSize) {
+                for (let y = 0; y < height; y += pixelSize) {
+                    // Create clusters using sine waves for smoother distribution
+                    const noiseValue = 
+                        Math.sin(x * noiseScale) * Math.cos(y * noiseScale) +
+                        Math.sin(x * noiseScale * 2) * Math.cos(y * noiseScale * 2) * 0.5;
+
+                    const threshold = Math.sin(patternSize * 0.01) * 0.3;
+
+                    if (noiseValue > threshold) {
+                        // Select color based on position and noise
+                        const colorIndex = Math.floor((noiseValue + 1) * colors.length / 2) % colors.length;
+                        ctx.fillStyle = colors[colorIndex];
+
+                        // Occasionally create larger blocks
+                        if (Math.random() > 0.8) {
+                            ctx.fillRect(x, y, pixelSize * 2, pixelSize * 2);
+                        } else {
+                            ctx.fillRect(x, y, pixelSize, pixelSize);
+                        }
+                    }
+                }
+            }
+
+            // Add random scattered pixels for texture
+            for (let i = 0; i < (width * height) / (pixelSize * 100); i++) {
+                const x = Math.floor(Math.random() * (width / pixelSize)) * pixelSize;
+                const y = Math.floor(Math.random() * (height / pixelSize)) * pixelSize;
+                ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+                ctx.fillRect(x, y, pixelSize, pixelSize);
+            }
+        }
+
+        function generateMultiTerrainCamo(colors) {
+            const width = canvas.width;
+            const height = canvas.height;
+            const patternSize = parseInt(document.getElementById('patternSize').value);
+
+            // Create larger zones with organic edges
+            colors.forEach(color => {
+                ctx.fillStyle = color;
+                const numZones = Math.floor((width * height) / (patternSize * patternSize * 3));
+
+                for (let i = 0; i < numZones; i++) {
+                    const x = Math.random() * width;
+                    const y = Math.random() * height;
+                    const w = patternSize * (1 + Math.random() * 2);
+                    const h = patternSize * (1 + Math.random() * 2);
+
+                    ctx.save();
+                    ctx.translate(x, y);
+                    ctx.rotate(Math.random() * Math.PI * 2);
+
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, w, h, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            });
+
+            // Add smaller organic details
+            colors.forEach(color => {
+                ctx.fillStyle = color;
+                const numDetails = Math.floor((width * height) / (patternSize * patternSize));
+
+                for (let i = 0; i < numDetails; i++) {
+                    const x = Math.random() * width;
+                    const y = Math.random() * height;
+                    const size = patternSize * 0.5 * (0.5 + Math.random());
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+        }
+
+        function generateImagePatternCamo(colors) {
+            if (!patternImage) {
+                alert('Please upload an image pattern first');
+                return;
+            }
+
+            const width = canvas.width;
+            const height = canvas.height;
+            const spacing = parseInt(document.getElementById('imageSpacing').value);
+            const patternSize = parseInt(document.getElementById('patternSize').value);
+
+            // Scale image to pattern size
+            const imgWidth = patternSize;
+            const imgHeight = patternSize * (patternImage.height / patternImage.width);
+
+            // Apply color tint using colors
+            for (let x = 0; x < width; x += imgWidth + spacing) {
+                for (let y = 0; y < height; y += imgHeight + spacing) {
+                    // Random color tint
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    ctx.globalAlpha = 0.6;
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x, y, imgWidth, imgHeight);
+
+                    ctx.globalAlpha = 1.0;
+                    ctx.drawImage(patternImage, x, y, imgWidth, imgHeight);
+                }
+            }
+        }
+
+        // Initial generation
+        generateCamo();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
