@@ -169,6 +169,7 @@
                             <option value="treeleaf">Tree Leaf</option>
                             <option value="digital">Digitalize</option>
                             <option value="multi-terrain">Multi-Terrain Brush</option>
+                            <option value="multicam-crye">MultiCam Crye Precision</option>
                             <option value="image">Image Pattern</option>
                         </select>
                     </div>
@@ -291,9 +292,9 @@
             },
             multicam: {
                 baseColor: '#AA9A7C',
-                colors: ['#877C5F', '#C4B89E', '#5C5446', '#9B8B6F'],
-                percentages: [25, 25, 25, 25],
-                style: 'multi-terrain'
+                colors: ['#877C5F', '#C4B89E', '#5C5446', '#9B8B6F', '#6B5D52', '#D4C8B0'],
+                percentages: [20, 18, 22, 15, 15, 10],
+                style: 'multicam-crye'
             },
             navy: {
                 baseColor: '#4A5F7F',
@@ -476,10 +477,214 @@
                 case 'multi-terrain':
                     generateMultiTerrainBrushCamo(colorData, algorithm);
                     break;
+                case 'multicam-crye':
+                    generateMultiCamCryeCamo(colorData, algorithm);
+                    break;
                 case 'image':
                     generateImagePatternCamo(colorData);
                     break;
             }
+        }
+
+        function generateMultiCamCryeCamo(colorData, algorithm) {
+            const width = canvas.width;
+            const height = canvas.height;
+            const patternSize = parseInt(document.getElementById('patternSize').value);
+
+            let densityMultiplier = 1.0;
+            switch(algorithm) {
+                case 'dense':
+                    densityMultiplier = 1.5;
+                    break;
+                case 'sparse':
+                    densityMultiplier = 0.6;
+                    break;
+                case 'layered':
+                    densityMultiplier = 1.3;
+                    break;
+            }
+
+            // Layer 1: Large irregular base shapes (background layer)
+            colorData.slice(0, 2).forEach((colorInfo, idx) => {
+                ctx.fillStyle = colorInfo.color;
+                ctx.globalAlpha = 0.8;
+
+                const numShapes = Math.floor((width * height) / (patternSize * patternSize * 8) * (colorInfo.percentage / 100) * densityMultiplier);
+
+                for (let i = 0; i < numShapes; i++) {
+                    let x, y;
+                    if (algorithm === 'noise') {
+                        x = noise(i * 0.08, idx, 10) * width;
+                        y = noise(i * 0.08, idx, 11) * height;
+                    } else {
+                        x = Math.random() * width;
+                        y = Math.random() * height;
+                    }
+
+                    const size = patternSize * (3 + Math.random() * 4);
+                    const angle = Math.random() * Math.PI * 2;
+
+                    ctx.save();
+                    ctx.translate(x, y);
+                    ctx.rotate(angle);
+
+                    // Draw elongated organic shape
+                    ctx.beginPath();
+                    const points = 6;
+                    for (let j = 0; j < points; j++) {
+                        const a = (j / points) * Math.PI * 2;
+                        const nextA = ((j + 1) / points) * Math.PI * 2;
+                        const midA = (a + nextA) / 2;
+
+                        const radiusX = size * (0.6 + Math.random() * 0.4);
+                        const radiusY = size * 0.4 * (0.6 + Math.random() * 0.4);
+
+                        const px = Math.cos(a) * radiusX;
+                        const py = Math.sin(a) * radiusY;
+                        const cpx = Math.cos(midA) * radiusX * 1.2;
+                        const cpy = Math.sin(midA) * radiusY * 1.2;
+                        const npx = Math.cos(nextA) * radiusX;
+                        const npy = Math.sin(nextA) * radiusY;
+
+                        if (j === 0) ctx.moveTo(px, py);
+                        ctx.quadraticCurveTo(cpx, cpy, npx, npy);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+
+                    ctx.restore();
+                }
+            });
+
+            ctx.globalAlpha = 1.0;
+
+            // Layer 2: Medium organic blobs (middle layer)
+            colorData.slice(2, 4).forEach((colorInfo, idx) => {
+                ctx.fillStyle = colorInfo.color;
+
+                const numBlobs = Math.floor((width * height) / (patternSize * patternSize * 3) * (colorInfo.percentage / 100) * densityMultiplier);
+
+                for (let i = 0; i < numBlobs; i++) {
+                    let x, y;
+                    if (algorithm === 'noise') {
+                        x = noise(i * 0.12, idx + 2, 12) * width;
+                        y = noise(i * 0.12, idx + 2, 13) * height;
+                    } else {
+                        x = Math.random() * width;
+                        y = Math.random() * height;
+                    }
+
+                    const size = patternSize * (1.2 + Math.random() * 1.8);
+
+                    // Irregular blob
+                    ctx.beginPath();
+                    const points = 7 + Math.floor(Math.random() * 3);
+                    for (let j = 0; j < points; j++) {
+                        const angle = (j / points) * Math.PI * 2;
+                        const nextAngle = ((j + 1) / points) * Math.PI * 2;
+                        const midAngle = (angle + nextAngle) / 2;
+
+                        const radius = size * (0.6 + Math.random() * 0.7);
+                        const midRadius = size * (0.5 + Math.random() * 0.6);
+
+                        const px = x + Math.cos(angle) * radius;
+                        const py = y + Math.sin(angle) * radius;
+                        const cpx = x + Math.cos(midAngle) * midRadius;
+                        const cpy = y + Math.sin(midAngle) * midRadius;
+                        const npx = x + Math.cos(nextAngle) * radius;
+                        const npy = y + Math.sin(nextAngle) * radius;
+
+                        if (j === 0) ctx.moveTo(px, py);
+                        ctx.quadraticCurveTo(cpx, cpy, npx, npy);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Add texture edge with small dots
+                    if (Math.random() > 0.5) {
+                        ctx.globalAlpha = 0.6;
+                        const numDots = 3 + Math.floor(Math.random() * 5);
+                        for (let d = 0; d < numDots; d++) {
+                            const dotAngle = Math.random() * Math.PI * 2;
+                            const dotDist = size * (0.8 + Math.random() * 0.4);
+                            const dotSize = size * (0.1 + Math.random() * 0.15);
+
+                            ctx.beginPath();
+                            ctx.arc(
+                                x + Math.cos(dotAngle) * dotDist,
+                                y + Math.sin(dotAngle) * dotDist,
+                                dotSize,
+                                0, Math.PI * 2
+                            );
+                            ctx.fill();
+                        }
+                        ctx.globalAlpha = 1.0;
+                    }
+                }
+            });
+
+            // Layer 3: Small detailed spots (top layer - characteristic of MultiCam)
+            const detailColors = colorData.length > 4 ? colorData.slice(4) : colorData.slice(0, 2);
+
+            detailColors.forEach((colorInfo, idx) => {
+                ctx.fillStyle = colorInfo.color;
+
+                const numSpots = Math.floor((width * height) / (patternSize * patternSize * 1.5) * (colorInfo.percentage / 100) * densityMultiplier * 1.5);
+
+                for (let i = 0; i < numSpots; i++) {
+                    const x = Math.random() * width;
+                    const y = Math.random() * height;
+                    const size = patternSize * (0.15 + Math.random() * 0.35);
+
+                    // Small irregular spots and dots
+                    ctx.globalAlpha = 0.7 + Math.random() * 0.3;
+
+                    if (Math.random() > 0.3) {
+                        // Irregular small blob
+                        ctx.beginPath();
+                        const points = 5 + Math.floor(Math.random() * 3);
+                        for (let j = 0; j < points; j++) {
+                            const angle = (j / points) * Math.PI * 2;
+                            const radius = size * (0.7 + Math.random() * 0.6);
+                            const px = x + Math.cos(angle) * radius;
+                            const py = y + Math.sin(angle) * radius;
+
+                            if (j === 0) ctx.moveTo(px, py);
+                            else ctx.lineTo(px, py);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+                    } else {
+                        // Simple dot
+                        ctx.beginPath();
+                        ctx.arc(x, y, size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            });
+
+            ctx.globalAlpha = 1.0;
+
+            // Layer 4: Fine texture overlay (very small specks)
+            if (algorithm === 'layered' || algorithm === 'dense') {
+                colorData.forEach(colorInfo => {
+                    ctx.fillStyle = colorInfo.color;
+                    const numSpecks = Math.floor((width * height) / (patternSize * patternSize * 0.5));
+
+                    for (let i = 0; i < numSpecks; i++) {
+                        const x = Math.random() * width;
+                        const y = Math.random() * height;
+                        const size = patternSize * (0.03 + Math.random() * 0.08);
+
+                        ctx.globalAlpha = 0.3 + Math.random() * 0.4;
+                        ctx.beginPath();
+                        ctx.arc(x, y, size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+            }
+
+            ctx.globalAlpha = 1.0;
         }
 
         function generateOrganicSplashCamo(colorData, algorithm) {
@@ -534,7 +739,6 @@
                     ctx.translate(x, y);
                     ctx.rotate(splashAngle);
 
-                    // Draw main splash body
                     ctx.beginPath();
                     const bodyPoints = 8;
                     for (let j = 0; j < bodyPoints; j++) {
@@ -549,7 +753,6 @@
                     ctx.closePath();
                     ctx.fill();
 
-                    // Draw paint trail with splatters
                     const trailSegments = 8;
                     for (let t = 0; t < trailSegments; t++) {
                         const progress = t / trailSegments;
@@ -557,14 +760,12 @@
                         const trailY = (Math.random() - 0.5) * splashSize * 0.3;
                         const trailSize = splashSize * (1 - progress * 0.7) * (0.3 + Math.random() * 0.4);
 
-                        // Add opacity variation for trail fade
                         ctx.globalAlpha = 1 - progress * 0.6;
 
                         ctx.beginPath();
                         ctx.arc(trailX, trailY, trailSize, 0, Math.PI * 2);
                         ctx.fill();
 
-                        // Add small splatters
                         if (Math.random() > 0.6) {
                             const splatterX = trailX + (Math.random() - 0.5) * splashSize;
                             const splatterY = trailY + (Math.random() - 0.5) * splashSize;
@@ -576,7 +777,6 @@
                         }
                     }
 
-                    // Draw elongated drips
                     const numDrips = Math.floor(Math.random() * 3);
                     for (let d = 0; d < numDrips; d++) {
                         const dripAngle = (Math.random() - 0.5) * Math.PI * 0.5;
@@ -597,7 +797,6 @@
 
                     ctx.globalAlpha = 1.0;
 
-                    // Layered effect
                     if (algorithm === 'layered' && Math.random() > 0.5) {
                         ctx.globalAlpha = 0.4;
                         ctx.beginPath();
@@ -644,7 +843,6 @@
                     ctx.translate(x, y);
                     ctx.rotate(brushAngle);
 
-                    // Draw brush stroke with bristle texture
                     const bristles = 8 + Math.floor(Math.random() * 8);
 
                     for (let b = 0; b < bristles; b++) {
@@ -659,7 +857,6 @@
                         ctx.beginPath();
                         ctx.moveTo(0, offsetY);
 
-                        // Create curved brush stroke
                         const segments = 5;
                         for (let s = 1; s <= segments; s++) {
                             const progress = s / segments;
@@ -671,13 +868,11 @@
                         ctx.stroke();
                     }
 
-                    // Add paint blob at start
                     ctx.globalAlpha = 0.7;
                     ctx.beginPath();
                     ctx.ellipse(0, 0, brushWidth * 0.6, brushWidth * 0.4, 0, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Add splatter effect along stroke
                     const numSplatters = Math.floor(Math.random() * 5);
                     for (let sp = 0; sp < numSplatters; sp++) {
                         const splatterPos = Math.random() * brushLength;
