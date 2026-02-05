@@ -192,6 +192,13 @@
                         <input type="range" class="form-range" id="patternSize" min="10" max="200" value="50" oninput="document.getElementById('patternSizeValue').textContent = this.value">
                     </div>
 
+                    <!-- Brush Trails Intensity -->
+                    <div class="mb-3" id="brushTrailsGroup">
+                        <label class="form-label">Brush Trails: <span id="brushTrailsValue">50</span>%</label>
+                        <input type="range" class="form-range" id="brushTrails" min="0" max="100" value="50" oninput="document.getElementById('brushTrailsValue').textContent = this.value">
+                        <small class="text-muted">Add brushstroke texture to edges</small>
+                    </div>
+
                     <!-- Camo Colors - Horizontal with Percentage -->
                     <div class="mb-3">
                         <label class="form-label">Camo Colors (hex + percentage)</label>
@@ -374,6 +381,8 @@
                 (style === 'image') ? 'block' : 'none';
             document.getElementById('imageSpacingGroup').style.display = 
                 (style === 'image') ? 'block' : 'none';
+            document.getElementById('brushTrailsGroup').style.display = 
+                (style === 'organic' || style === 'multi-terrain') ? 'block' : 'none';
         });
 
         // Image upload handler
@@ -474,6 +483,43 @@
             }
         }
 
+        function addBrushTrails(x, y, size, color) {
+            const brushIntensity = parseInt(document.getElementById('brushTrails').value) / 100;
+            if (brushIntensity === 0) return;
+
+            const numTrails = Math.floor(3 + Math.random() * 5 * brushIntensity);
+
+            ctx.strokeStyle = color;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            for (let i = 0; i < numTrails; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const length = size * (0.3 + Math.random() * 0.7) * brushIntensity;
+                const startDist = size * (0.5 + Math.random() * 0.5);
+
+                const startX = x + Math.cos(angle) * startDist;
+                const startY = y + Math.sin(angle) * startDist;
+                const endX = startX + Math.cos(angle) * length;
+                const endY = startY + Math.sin(angle) * length;
+
+                ctx.globalAlpha = 0.3 + Math.random() * 0.4 * brushIntensity;
+                ctx.lineWidth = size * 0.05 * (0.5 + Math.random() * 0.5);
+
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+
+                // Add curve to trail
+                const midX = (startX + endX) / 2 + (Math.random() - 0.5) * length * 0.3;
+                const midY = (startY + endY) / 2 + (Math.random() - 0.5) * length * 0.3;
+                ctx.quadraticCurveTo(midX, midY, endX, endY);
+
+                ctx.stroke();
+            }
+
+            ctx.globalAlpha = 1.0;
+        }
+
         function generateOrganicCamo(colorData, algorithm) {
             const width = canvas.width;
             const height = canvas.height;
@@ -545,6 +591,9 @@
 
                     ctx.closePath();
                     ctx.fill();
+
+                    // Add brush trails around the blob
+                    addBrushTrails(x, y, baseRadius, colorInfo.color);
 
                     if (algorithm === 'layered' && Math.random() > 0.6) {
                         ctx.globalAlpha = 0.4;
@@ -715,7 +764,7 @@
                     ctx.translate(x, y);
                     ctx.rotate(angle);
 
-                    // Draw stroke with varying opacity
+                    // Draw main stroke
                     ctx.globalAlpha = 0.6 + Math.random() * 0.4;
                     ctx.lineWidth = strokeWidth;
                     ctx.lineCap = 'round';
@@ -740,6 +789,9 @@
 
                     ctx.globalAlpha = 1.0;
                     ctx.restore();
+
+                    // Add additional brush trails
+                    addBrushTrails(x, y, strokeLength / 2, colorInfo.color);
                 }
             });
         }
