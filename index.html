@@ -29,6 +29,21 @@
             max-height: calc(100vh - 100px);
             overflow-y: auto;
         }
+        .navbar-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .navbar-controls input[type="number"] {
+            width: 80px;
+            background: white;
+            border: 1px solid #495057;
+        }
+        .navbar-controls label {
+            color: white;
+            margin: 0;
+            font-size: 14px;
+        }
         .color-inputs-container {
             display: flex;
             flex-wrap: wrap;
@@ -53,12 +68,12 @@
             cursor: pointer;
         }
         .color-item input[type="text"] {
-            width: 80px;
+            width: 70px;
             font-size: 11px;
             text-align: center;
-            font-family: monospace;
+            padding: 2px;
         }
-        .color-item button.btn-danger {
+        .color-item button {
             width: 60px;
         }
         .color-item .percentage-control {
@@ -89,19 +104,6 @@
             max-width: 100%;
             max-height: 100%;
         }
-        .navbar-controls {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .navbar-controls input {
-            width: 80px;
-        }
-        .navbar-controls label {
-            color: white;
-            margin: 0;
-            font-size: 14px;
-        }
     </style>
 </head>
 <body>
@@ -111,10 +113,11 @@
             <span class="navbar-brand mb-0 h1">🎨 Camouflage Pattern Generator</span>
             <div class="navbar-controls">
                 <label>Width:</label>
-                <input type="number" class="form-control form-control-sm" id="width" value="1024" min="100" max="2000">
+                <input type="number" class="form-control form-control-sm" id="width" value="1024" min="100" max="4096">
                 <label>Height:</label>
-                <input type="number" class="form-control form-control-sm" id="height" value="1024" min="100" max="2000">
-                <button class="btn btn-success btn-sm" onclick="saveImage()">💾 Save</button>
+                <input type="number" class="form-control form-control-sm" id="height" value="1024" min="100" max="4096">
+                <button class="btn btn-success btn-sm" onclick="generateCamo()">Generate</button>
+                <button class="btn btn-primary btn-sm" onclick="saveCamo()">Save</button>
             </div>
         </div>
     </nav>
@@ -155,10 +158,7 @@
                     <!-- Base Color -->
                     <div class="mb-3">
                         <label class="form-label">Base Color</label>
-                        <div class="d-flex gap-2">
-                            <input type="color" class="form-control form-control-color" id="baseColor" value="#8B7355" onchange="updateBaseColorHex()">
-                            <input type="text" class="form-control" id="baseColorHex" value="#8B7355" onchange="updateBaseColorFromHex()">
-                        </div>
+                        <input type="color" class="form-control form-control-color" id="baseColor" value="#8B7355">
                     </div>
 
                     <!-- Style -->
@@ -166,6 +166,7 @@
                         <label class="form-label">Style</label>
                         <select class="form-select" id="style">
                             <option value="organic">Organic Curve</option>
+                            <option value="treeleaf">Tree Leaf</option>
                             <option value="digital">Digitalize</option>
                             <option value="multi-terrain">Multi-Terrain</option>
                             <option value="image">Image Pattern</option>
@@ -191,13 +192,13 @@
                         <input type="range" class="form-range" id="patternSize" min="10" max="200" value="50" oninput="document.getElementById('patternSizeValue').textContent = this.value">
                     </div>
 
-                    <!-- Camo Colors - Horizontal with Percentage and Hex -->
+                    <!-- Camo Colors - Horizontal with Percentage -->
                     <div class="mb-3">
-                        <label class="form-label">Camo Colors</label>
+                        <label class="form-label">Camo Colors (hex + percentage)</label>
                         <div class="color-inputs-container" id="colorInputs">
                             <div class="color-item">
-                                <input type="color" class="camo-color" value="#3d5a3d" onchange="updateColorHex(this)">
-                                <input type="text" class="camo-color-hex form-control" value="#3d5a3d" onchange="updateColorFromHex(this)">
+                                <input type="color" class="camo-color" value="#3d5a3d" onchange="updateHexInput(this)">
+                                <input type="text" class="hex-input" value="#3d5a3d" onchange="updateColorPicker(this)">
                                 <div class="percentage-control">
                                     <input type="range" class="color-percentage" min="1" max="100" value="33">
                                     <small><span class="percentage-value">33</span>%</small>
@@ -205,8 +206,8 @@
                                 <button class="btn btn-sm btn-danger" onclick="removeColor(this)">×</button>
                             </div>
                             <div class="color-item">
-                                <input type="color" class="camo-color" value="#6b8e23" onchange="updateColorHex(this)">
-                                <input type="text" class="camo-color-hex form-control" value="#6b8e23" onchange="updateColorFromHex(this)">
+                                <input type="color" class="camo-color" value="#6b8e23" onchange="updateHexInput(this)">
+                                <input type="text" class="hex-input" value="#6b8e23" onchange="updateColorPicker(this)">
                                 <div class="percentage-control">
                                     <input type="range" class="color-percentage" min="1" max="100" value="33">
                                     <small><span class="percentage-value">33</span>%</small>
@@ -214,8 +215,8 @@
                                 <button class="btn btn-sm btn-danger" onclick="removeColor(this)">×</button>
                             </div>
                             <div class="color-item">
-                                <input type="color" class="camo-color" value="#2f4f2f" onchange="updateColorHex(this)">
-                                <input type="text" class="camo-color-hex form-control" value="#2f4f2f" onchange="updateColorFromHex(this)">
+                                <input type="color" class="camo-color" value="#2f4f2f" onchange="updateHexInput(this)">
+                                <input type="text" class="hex-input" value="#2f4f2f" onchange="updateColorPicker(this)">
                                 <div class="percentage-control">
                                     <input type="range" class="color-percentage" min="1" max="100" value="34">
                                     <small><span class="percentage-value">34</span>%</small>
@@ -246,9 +247,6 @@
                         <label class="form-label">Image Spacing: <span id="imageSpacingValue">20</span>px</label>
                         <input type="range" class="form-range" id="imageSpacing" min="0" max="100" value="20" oninput="document.getElementById('imageSpacingValue').textContent = this.value">
                     </div>
-
-                    <!-- Generate Button -->
-                    <button class="btn btn-primary w-100" onclick="generateCamo()">Generate Camouflage</button>
                 </div>
             </div>
         </div>
@@ -258,39 +256,6 @@
         let canvas = document.getElementById('camoCanvas');
         let ctx = canvas.getContext('2d');
         let patternImage = null;
-
-        // Hex color functions
-        function updateBaseColorHex() {
-            document.getElementById('baseColorHex').value = document.getElementById('baseColor').value.toUpperCase();
-        }
-
-        function updateBaseColorFromHex() {
-            const hex = document.getElementById('baseColorHex').value;
-            if (/^#[0-9A-F]{6}$/i.test(hex)) {
-                document.getElementById('baseColor').value = hex;
-            }
-        }
-
-        function updateColorHex(colorInput) {
-            const hexInput = colorInput.parentElement.querySelector('.camo-color-hex');
-            hexInput.value = colorInput.value.toUpperCase();
-        }
-
-        function updateColorFromHex(hexInput) {
-            const hex = hexInput.value;
-            if (/^#[0-9A-F]{6}$/i.test(hex)) {
-                const colorInput = hexInput.parentElement.querySelector('.camo-color');
-                colorInput.value = hex;
-            }
-        }
-
-        // Save image function
-        function saveImage() {
-            const link = document.createElement('a');
-            link.download = 'camouflage_' + Date.now() + '.png';
-            link.href = canvas.toDataURL();
-            link.click();
-        }
 
         // Preset configurations
         const presets = {
@@ -352,7 +317,7 @@
                 baseColor: '#9AA88B',
                 colors: ['#7C8F6B', '#6B7C54', '#8B9A7A', '#4A5F3A'],
                 percentages: [30, 25, 25, 20],
-                style: 'organic'
+                style: 'treeleaf'
             },
             emc: {
                 baseColor: '#7C8F6B',
@@ -361,6 +326,20 @@
                 style: 'digital'
             }
         };
+
+        // Update hex input when color picker changes
+        function updateHexInput(colorPicker) {
+            const hexInput = colorPicker.parentElement.querySelector('.hex-input');
+            hexInput.value = colorPicker.value;
+        }
+
+        // Update color picker when hex input changes
+        function updateColorPicker(hexInput) {
+            const colorPicker = hexInput.parentElement.querySelector('.camo-color');
+            if (/^#[0-9A-F]{6}$/i.test(hexInput.value)) {
+                colorPicker.value = hexInput.value;
+            }
+        }
 
         // Update percentage displays
         document.addEventListener('input', function(e) {
@@ -376,10 +355,8 @@
             if (presetValue !== 'custom' && presets[presetValue]) {
                 const preset = presets[presetValue];
                 document.getElementById('baseColor').value = preset.baseColor;
-                document.getElementById('baseColorHex').value = preset.baseColor.toUpperCase();
                 document.getElementById('style').value = preset.style;
 
-                // Update colors with percentages
                 const colorInputsDiv = document.getElementById('colorInputs');
                 colorInputsDiv.innerHTML = '';
                 preset.colors.forEach((color, index) => {
@@ -426,8 +403,8 @@
             const div = document.createElement('div');
             div.className = 'color-item';
             div.innerHTML = `
-                <input type="color" class="camo-color" value="${color}" onchange="updateColorHex(this)">
-                <input type="text" class="camo-color-hex form-control" value="${color.toUpperCase()}" onchange="updateColorFromHex(this)">
+                <input type="color" class="camo-color" value="${color}" onchange="updateHexInput(this)">
+                <input type="text" class="hex-input" value="${color}" onchange="updateColorPicker(this)">
                 <div class="percentage-control">
                     <input type="range" class="color-percentage" min="1" max="100" value="${percentage}">
                     <small><span class="percentage-value">${percentage}</span>%</small>
@@ -452,33 +429,38 @@
             return colors;
         }
 
-        // Simple noise function
         function noise(x, y, seed = 0) {
             const n = Math.sin(x * 12.9898 + y * 78.233 + seed) * 43758.5453;
             return n - Math.floor(n);
         }
 
+        function saveCamo() {
+            const link = document.createElement('a');
+            link.download = 'camouflage_' + Date.now() + '.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
         function generateCamo() {
-            // Update canvas size
             const width = parseInt(document.getElementById('width').value);
             const height = parseInt(document.getElementById('height').value);
             canvas.width = width;
             canvas.height = height;
 
-            // Get configuration
             const baseColor = document.getElementById('baseColor').value;
             const style = document.getElementById('style').value;
             const algorithm = document.getElementById('algorithm').value;
             const colorData = getCamoColors();
 
-            // Fill base color
             ctx.fillStyle = baseColor;
             ctx.fillRect(0, 0, width, height);
 
-            // Generate pattern based on style
             switch(style) {
                 case 'organic':
                     generateOrganicCamo(colorData, algorithm);
+                    break;
+                case 'treeleaf':
+                    generateTreeLeafCamo(colorData, algorithm);
                     break;
                 case 'digital':
                     generateDigitalCamo(colorData, algorithm);
@@ -497,7 +479,6 @@
             const height = canvas.height;
             const patternSize = parseInt(document.getElementById('patternSize').value);
 
-            // Apply algorithm modifications
             let densityMultiplier = 1.0;
             let sizeMultiplier = 1.0;
 
@@ -522,7 +503,7 @@
             colorData.forEach((colorInfo, colorIndex) => {
                 ctx.fillStyle = colorInfo.color;
                 const percentageFactor = colorInfo.percentage / 100;
-                const numBlobs = Math.floor((width * height) / (patternSize * patternSize * 2) * percentageFactor * densityMultiplier);
+                const numBlobs = Math.floor((width * height) / (patternSize * patternSize * 1.5) * percentageFactor * densityMultiplier);
 
                 for (let i = 0; i < numBlobs; i++) {
                     let x, y;
@@ -531,50 +512,117 @@
                         x = (noise(i * 0.1, colorIndex, 1) * 0.8 + 0.1) * width;
                         y = (noise(i * 0.1, colorIndex, 2) * 0.8 + 0.1) * height;
                     } else {
-                        x = Math.random() * (width + patternSize * 2) - patternSize;
-                        y = Math.random() * (height + patternSize * 2) - patternSize;
+                        x = Math.random() * width;
+                        y = Math.random() * height;
                     }
 
-                    // Create organic blob
+                    // Draw smooth irregular shape
                     ctx.beginPath();
-                    const points = algorithm === 'spotted' ? 12 : (6 + Math.floor(Math.random() * 4));
-                    const angleStep = (Math.PI * 2) / points;
+                    const points = algorithm === 'spotted' ? 8 : (5 + Math.floor(Math.random() * 3));
+                    const baseRadius = patternSize * sizeMultiplier * (0.7 + Math.random() * 0.6);
 
-                    for (let j = 0; j <= points; j++) {
-                        const angle = j * angleStep;
-                        const nextAngle = (j + 1) * angleStep;
+                    for (let j = 0; j < points; j++) {
+                        const angle = (j / points) * Math.PI * 2;
+                        const nextAngle = ((j + 1) / points) * Math.PI * 2;
+                        const midAngle = (angle + nextAngle) / 2;
 
-                        const radiusVar = 0.6 + Math.random() * 0.8;
-                        const radius = patternSize * radiusVar * sizeMultiplier;
-                        const nextRadiusVar = 0.6 + Math.random() * 0.8;
-                        const nextRadius = patternSize * nextRadiusVar * sizeMultiplier;
+                        const radius = baseRadius * (0.7 + Math.random() * 0.6);
+                        const nextRadius = baseRadius * (0.7 + Math.random() * 0.6);
+                        const midRadius = (radius + nextRadius) / 2 * (0.8 + Math.random() * 0.4);
 
                         const px = x + Math.cos(angle) * radius;
                         const py = y + Math.sin(angle) * radius;
+                        const cpx = x + Math.cos(midAngle) * midRadius;
+                        const cpy = y + Math.sin(midAngle) * midRadius;
                         const npx = x + Math.cos(nextAngle) * nextRadius;
                         const npy = y + Math.sin(nextAngle) * nextRadius;
 
                         if (j === 0) {
                             ctx.moveTo(px, py);
-                        } else {
-                            const cp1x = x + Math.cos(angle - angleStep * 0.5) * radius * 1.2;
-                            const cp1y = y + Math.sin(angle - angleStep * 0.5) * radius * 1.2;
-                            const cp2x = x + Math.cos(angle + angleStep * 0.5) * radius * 1.2;
-                            const cp2y = y + Math.sin(angle + angleStep * 0.5) * radius * 1.2;
-
-                            ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, npx, npy);
                         }
+                        ctx.quadraticCurveTo(cpx, cpy, npx, npy);
                     }
 
                     ctx.closePath();
                     ctx.fill();
 
-                    // Layered algorithm adds transparency
-                    if (algorithm === 'layered' && Math.random() > 0.5) {
-                        ctx.globalAlpha = 0.5;
+                    if (algorithm === 'layered' && Math.random() > 0.6) {
+                        ctx.globalAlpha = 0.4;
                         ctx.fill();
                         ctx.globalAlpha = 1.0;
                     }
+                }
+            });
+        }
+
+        function generateTreeLeafCamo(colorData, algorithm) {
+            const width = canvas.width;
+            const height = canvas.height;
+            const patternSize = parseInt(document.getElementById('patternSize').value);
+
+            let densityMultiplier = algorithm === 'dense' ? 2.0 : (algorithm === 'sparse' ? 0.6 : 1.2);
+
+            colorData.forEach((colorInfo, colorIndex) => {
+                ctx.fillStyle = colorInfo.color;
+                const percentageFactor = colorInfo.percentage / 100;
+                const numLeaves = Math.floor((width * height) / (patternSize * patternSize * 1.2) * percentageFactor * densityMultiplier);
+
+                for (let i = 0; i < numLeaves; i++) {
+                    let x, y;
+
+                    if (algorithm === 'noise') {
+                        x = noise(i * 0.15, colorIndex, 5) * width;
+                        y = noise(i * 0.15, colorIndex, 6) * height;
+                    } else {
+                        x = Math.random() * width;
+                        y = Math.random() * height;
+                    }
+
+                    const leafSize = patternSize * (0.5 + Math.random() * 0.8);
+                    const rotation = Math.random() * Math.PI * 2;
+
+                    ctx.save();
+                    ctx.translate(x, y);
+                    ctx.rotate(rotation);
+
+                    // Draw leaf shape with curves
+                    ctx.beginPath();
+                    ctx.moveTo(0, -leafSize);
+
+                    // Right side of leaf
+                    ctx.quadraticCurveTo(
+                        leafSize * 0.6, -leafSize * 0.5,
+                        leafSize * 0.4, 0
+                    );
+                    ctx.quadraticCurveTo(
+                        leafSize * 0.5, leafSize * 0.3,
+                        0, leafSize * 0.7
+                    );
+
+                    // Left side of leaf
+                    ctx.quadraticCurveTo(
+                        -leafSize * 0.5, leafSize * 0.3,
+                        -leafSize * 0.4, 0
+                    );
+                    ctx.quadraticCurveTo(
+                        -leafSize * 0.6, -leafSize * 0.5,
+                        0, -leafSize
+                    );
+
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Add stem line
+                    if (Math.random() > 0.3) {
+                        ctx.strokeStyle = colorInfo.color;
+                        ctx.lineWidth = leafSize * 0.05;
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(0, leafSize * 0.7);
+                        ctx.stroke();
+                    }
+
+                    ctx.restore();
                 }
             });
         }
@@ -588,7 +636,6 @@
             const scale = Math.max(1, Math.floor(patternSize / 50));
             const noiseScale = algorithm === 'noise' ? 0.05 : 0.1;
 
-            // Build color array based on percentages
             const expandedColors = [];
             colorData.forEach(colorInfo => {
                 const count = Math.floor(colorInfo.percentage);
@@ -639,10 +686,11 @@
             const height = canvas.height;
             const patternSize = parseInt(document.getElementById('patternSize').value);
 
-            let densityMultiplier = algorithm === 'dense' ? 1.5 : (algorithm === 'sparse' ? 0.5 : 1.0);
+            let densityMultiplier = algorithm === 'dense' ? 1.8 : (algorithm === 'sparse' ? 0.5 : 1.2);
 
-            // First pass: Create large irregular paint-like strokes
+            // Draw brushstroke-like patterns
             colorData.forEach((colorInfo, index) => {
+                ctx.strokeStyle = colorInfo.color;
                 ctx.fillStyle = colorInfo.color;
                 const percentageFactor = colorInfo.percentage / 100;
                 const numStrokes = Math.floor((width * height) / (patternSize * patternSize * 4) * percentageFactor * densityMultiplier);
@@ -651,124 +699,48 @@
                     let x, y;
 
                     if (algorithm === 'noise') {
-                        x = noise(i * 0.2, index, 3) * width;
-                        y = noise(i * 0.2, index, 4) * height;
+                        x = noise(i * 0.2, index, 7) * width;
+                        y = noise(i * 0.2, index, 8) * height;
                     } else {
                         x = Math.random() * width;
                         y = Math.random() * height;
                     }
 
-                    // Create irregular paint stroke shape
-                    ctx.beginPath();
-                    const strokePoints = 8 + Math.floor(Math.random() * 6);
-                    const baseRadius = patternSize * (1.5 + Math.random() * 2);
-
-                    for (let j = 0; j <= strokePoints; j++) {
-                        const angle = (j / strokePoints) * Math.PI * 2;
-                        const nextAngle = ((j + 1) / strokePoints) * Math.PI * 2;
-
-                        // Highly variable radius for paint splatter effect
-                        const radiusVar = 0.4 + Math.random() * 1.2;
-                        const radius = baseRadius * radiusVar;
-                        const nextRadiusVar = 0.4 + Math.random() * 1.2;
-                        const nextRadius = baseRadius * nextRadiusVar;
-
-                        const px = x + Math.cos(angle) * radius;
-                        const py = y + Math.sin(angle) * radius;
-                        const npx = x + Math.cos(nextAngle) * nextRadius;
-                        const npy = y + Math.sin(nextAngle) * nextRadius;
-
-                        if (j === 0) {
-                            ctx.moveTo(px, py);
-                        } else {
-                            // Use quadratic curves for smoother paint edges
-                            const cpAngle = angle + (nextAngle - angle) / 2;
-                            const cpRadius = (radius + nextRadius) / 2 * (0.8 + Math.random() * 0.4);
-                            const cpx = x + Math.cos(cpAngle) * cpRadius;
-                            const cpy = y + Math.sin(cpAngle) * cpRadius;
-
-                            ctx.quadraticCurveTo(cpx, cpy, npx, npy);
-                        }
-                    }
-
-                    ctx.closePath();
-                    ctx.fill();
-
-                    // Add paint texture with random smaller splatters
-                    if (Math.random() > 0.6) {
-                        for (let k = 0; k < 3; k++) {
-                            const splatterX = x + (Math.random() - 0.5) * baseRadius * 1.5;
-                            const splatterY = y + (Math.random() - 0.5) * baseRadius * 1.5;
-                            const splatterSize = patternSize * 0.3 * (0.5 + Math.random() * 0.5);
-
-                            ctx.beginPath();
-                            ctx.arc(splatterX, splatterY, splatterSize, 0, Math.PI * 2);
-                            ctx.fill();
-                        }
-                    }
-                }
-            });
-
-            // Second pass: Add flowing transition areas
-            colorData.slice(0, Math.min(2, colorData.length)).forEach((colorInfo) => {
-                ctx.fillStyle = colorInfo.color;
-                ctx.globalAlpha = 0.4;
-                const percentageFactor = colorInfo.percentage / 100;
-                const numFlows = Math.floor((width * height) / (patternSize * patternSize * 6) * percentageFactor);
-
-                for (let i = 0; i < numFlows; i++) {
-                    const x = Math.random() * width;
-                    const y = Math.random() * height;
-
-                    // Create elongated flowing shapes
-                    ctx.beginPath();
-                    const flowLength = patternSize * (2 + Math.random() * 3);
-                    const flowWidth = patternSize * (0.5 + Math.random() * 0.8);
-                    const flowAngle = Math.random() * Math.PI * 2;
+                    // Create brushstroke effect
+                    const angle = Math.random() * Math.PI * 2;
+                    const strokeLength = patternSize * (1.5 + Math.random() * 2);
+                    const strokeWidth = patternSize * (0.4 + Math.random() * 0.6);
 
                     ctx.save();
                     ctx.translate(x, y);
-                    ctx.rotate(flowAngle);
+                    ctx.rotate(angle);
 
-                    // Draw flowing brush stroke
-                    ctx.moveTo(-flowLength / 2, 0);
-                    ctx.bezierCurveTo(
-                        -flowLength / 4, -flowWidth,
-                        flowLength / 4, -flowWidth,
-                        flowLength / 2, 0
-                    );
-                    ctx.bezierCurveTo(
-                        flowLength / 4, flowWidth,
-                        -flowLength / 4, flowWidth,
-                        -flowLength / 2, 0
-                    );
+                    // Draw stroke with varying opacity
+                    ctx.globalAlpha = 0.6 + Math.random() * 0.4;
+                    ctx.lineWidth = strokeWidth;
+                    ctx.lineCap = 'round';
 
-                    ctx.closePath();
-                    ctx.fill();
+                    ctx.beginPath();
+                    const segments = 5;
+                    for (let s = 0; s < segments; s++) {
+                        const sx = (s / segments) * strokeLength;
+                        const sy = (Math.random() - 0.5) * strokeWidth * 0.3;
+
+                        if (s === 0) ctx.moveTo(sx, sy);
+                        else ctx.lineTo(sx, sy);
+                    }
+                    ctx.stroke();
+
+                    // Fill some strokes
+                    if (Math.random() > 0.5) {
+                        ctx.beginPath();
+                        ctx.ellipse(strokeLength / 2, 0, strokeLength / 2, strokeWidth / 2, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    ctx.globalAlpha = 1.0;
                     ctx.restore();
                 }
-
-                ctx.globalAlpha = 1.0;
-            });
-
-            // Third pass: Add fine texture spots
-            colorData.forEach((colorInfo) => {
-                ctx.fillStyle = colorInfo.color;
-                const percentageFactor = colorInfo.percentage / 100;
-                const numSpots = Math.floor((width * height) / (patternSize * patternSize * 2) * percentageFactor * densityMultiplier);
-
-                for (let i = 0; i < numSpots; i++) {
-                    const x = Math.random() * width;
-                    const y = Math.random() * height;
-                    const size = patternSize * 0.15 * (0.3 + Math.random() * 0.7);
-
-                    ctx.globalAlpha = 0.6 + Math.random() * 0.4;
-                    ctx.beginPath();
-                    ctx.arc(x, y, size, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-
-                ctx.globalAlpha = 1.0;
             });
         }
 
