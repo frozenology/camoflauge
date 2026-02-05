@@ -40,6 +40,10 @@
             flex-direction: column;
             align-items: center;
             gap: 5px;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 8px;
+            background: #f8f9fa;
         }
         .color-item input[type="color"] {
             width: 60px;
@@ -50,6 +54,19 @@
         }
         .color-item button {
             width: 60px;
+        }
+        .color-item .percentage-control {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 60px;
+        }
+        .color-item .percentage-control input {
+            width: 100%;
+        }
+        .color-item .percentage-control small {
+            font-size: 10px;
+            color: #666;
         }
         .image-preview {
             width: 100%;
@@ -101,6 +118,11 @@
                             <option value="digital">Digital</option>
                             <option value="multicam">MultiCam</option>
                             <option value="navy">Navy Blue</option>
+                            <option value="flora">Russian Flora</option>
+                            <option value="partizan">Russian Partizan</option>
+                            <option value="surpat">Russian SURPAT</option>
+                            <option value="kamysh">Russian Kamysh</option>
+                            <option value="emc">Russian EMR (Digital Flora)</option>
                         </select>
                     </div>
 
@@ -118,6 +140,19 @@
                             <option value="digital">Digitalize</option>
                             <option value="multi-terrain">Multi-Terrain</option>
                             <option value="image">Image Pattern</option>
+                        </select>
+                    </div>
+
+                    <!-- Algorithm Option -->
+                    <div class="mb-3">
+                        <label class="form-label">Algorithm</label>
+                        <select class="form-select" id="algorithm">
+                            <option value="standard">Standard</option>
+                            <option value="noise">Perlin Noise</option>
+                            <option value="dense">Dense Fill</option>
+                            <option value="sparse">Sparse Fill</option>
+                            <option value="layered">Layered</option>
+                            <option value="spotted">Spotted</option>
                         </select>
                     </div>
 
@@ -139,20 +174,32 @@
                         <input type="range" class="form-range" id="patternSize" min="10" max="200" value="50" oninput="document.getElementById('patternSizeValue').textContent = this.value">
                     </div>
 
-                    <!-- Camo Colors - Horizontal -->
+                    <!-- Camo Colors - Horizontal with Percentage -->
                     <div class="mb-3">
-                        <label class="form-label">Camo Colors</label>
+                        <label class="form-label">Camo Colors (with percentage)</label>
                         <div class="color-inputs-container" id="colorInputs">
                             <div class="color-item">
                                 <input type="color" class="camo-color" value="#3d5a3d">
+                                <div class="percentage-control">
+                                    <input type="range" class="color-percentage" min="1" max="100" value="33">
+                                    <small><span class="percentage-value">33</span>%</small>
+                                </div>
                                 <button class="btn btn-sm btn-danger" onclick="removeColor(this)">×</button>
                             </div>
                             <div class="color-item">
                                 <input type="color" class="camo-color" value="#6b8e23">
+                                <div class="percentage-control">
+                                    <input type="range" class="color-percentage" min="1" max="100" value="33">
+                                    <small><span class="percentage-value">33</span>%</small>
+                                </div>
                                 <button class="btn btn-sm btn-danger" onclick="removeColor(this)">×</button>
                             </div>
                             <div class="color-item">
                                 <input type="color" class="camo-color" value="#2f4f2f">
+                                <div class="percentage-control">
+                                    <input type="range" class="color-percentage" min="1" max="100" value="34">
+                                    <small><span class="percentage-value">34</span>%</small>
+                                </div>
                                 <button class="btn btn-sm btn-danger" onclick="removeColor(this)">×</button>
                             </div>
                         </div>
@@ -197,34 +244,78 @@
             woodland: {
                 baseColor: '#8B7355',
                 colors: ['#3d5a3d', '#6b8e23', '#2f4f2f', '#654321'],
+                percentages: [30, 25, 25, 20],
                 style: 'organic'
             },
             desert: {
                 baseColor: '#EDC9AF',
                 colors: ['#C2B280', '#967969', '#F4A460', '#DEB887'],
+                percentages: [30, 25, 25, 20],
                 style: 'organic'
             },
             urban: {
                 baseColor: '#808080',
                 colors: ['#696969', '#A9A9A9', '#2F4F4F', '#DCDCDC'],
+                percentages: [25, 25, 25, 25],
                 style: 'organic'
             },
             digital: {
                 baseColor: '#7A8B8B',
                 colors: ['#556B2F', '#8FBC8F', '#2F4F4F', '#A9A9A9'],
+                percentages: [30, 25, 25, 20],
                 style: 'digital'
             },
             multicam: {
                 baseColor: '#AA9A7C',
                 colors: ['#877C5F', '#C4B89E', '#5C5446', '#9B8B6F'],
+                percentages: [25, 25, 25, 25],
                 style: 'multi-terrain'
             },
             navy: {
                 baseColor: '#4A5F7F',
                 colors: ['#1C2841', '#2C3E50', '#34495E', '#607D8B'],
+                percentages: [30, 25, 25, 20],
                 style: 'organic'
+            },
+            flora: {
+                baseColor: '#7C8F6B',
+                colors: ['#4A5F3A', '#6B7C54', '#3D4E2F', '#8B9A7A'],
+                percentages: [35, 30, 20, 15],
+                style: 'organic'
+            },
+            partizan: {
+                baseColor: '#8B9478',
+                colors: ['#5A6B4A', '#4A3D2F', '#7C8F6B', '#3D3D2F'],
+                percentages: [30, 25, 25, 20],
+                style: 'organic'
+            },
+            surpat: {
+                baseColor: '#6B7C5A',
+                colors: ['#4A5F3A', '#8B9A7A', '#3D4E2F', '#5A6B4A'],
+                percentages: [35, 30, 20, 15],
+                style: 'organic'
+            },
+            kamysh: {
+                baseColor: '#9AA88B',
+                colors: ['#7C8F6B', '#6B7C54', '#8B9A7A', '#4A5F3A'],
+                percentages: [30, 25, 25, 20],
+                style: 'organic'
+            },
+            emc: {
+                baseColor: '#7C8F6B',
+                colors: ['#4A5F3A', '#6B7C54', '#3D4E2F', '#8B9A7A'],
+                percentages: [30, 25, 25, 20],
+                style: 'digital'
             }
         };
+
+        // Update percentage displays
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('color-percentage')) {
+                const valueSpan = e.target.parentElement.querySelector('.percentage-value');
+                valueSpan.textContent = e.target.value;
+            }
+        });
 
         // Handle preset selection
         document.getElementById('preset').addEventListener('change', function() {
@@ -234,11 +325,11 @@
                 document.getElementById('baseColor').value = preset.baseColor;
                 document.getElementById('style').value = preset.style;
 
-                // Update colors
+                // Update colors with percentages
                 const colorInputsDiv = document.getElementById('colorInputs');
                 colorInputsDiv.innerHTML = '';
-                preset.colors.forEach(color => {
-                    addColorInput(color);
+                preset.colors.forEach((color, index) => {
+                    addColorInput(color, preset.percentages[index]);
                 });
             }
         });
@@ -273,15 +364,19 @@
         });
 
         function addColor() {
-            addColorInput('#000000');
+            addColorInput('#000000', 20);
         }
 
-        function addColorInput(color = '#000000') {
+        function addColorInput(color = '#000000', percentage = 20) {
             const colorInputsDiv = document.getElementById('colorInputs');
             const div = document.createElement('div');
             div.className = 'color-item';
             div.innerHTML = `
                 <input type="color" class="camo-color" value="${color}">
+                <div class="percentage-control">
+                    <input type="range" class="color-percentage" min="1" max="100" value="${percentage}">
+                    <small><span class="percentage-value">${percentage}</span>%</small>
+                </div>
                 <button class="btn btn-sm btn-danger" onclick="removeColor(this)">×</button>
             `;
             colorInputsDiv.appendChild(div);
@@ -292,8 +387,20 @@
         }
 
         function getCamoColors() {
-            const colorInputs = document.querySelectorAll('.camo-color');
-            return Array.from(colorInputs).map(input => input.value);
+            const colorItems = document.querySelectorAll('.color-item');
+            const colors = [];
+            colorItems.forEach(item => {
+                const color = item.querySelector('.camo-color').value;
+                const percentage = parseInt(item.querySelector('.color-percentage').value);
+                colors.push({ color, percentage });
+            });
+            return colors;
+        }
+
+        // Simple noise function
+        function noise(x, y, seed = 0) {
+            const n = Math.sin(x * 12.9898 + y * 78.233 + seed) * 43758.5453;
+            return n - Math.floor(n);
         }
 
         function generateCamo() {
@@ -306,7 +413,8 @@
             // Get configuration
             const baseColor = document.getElementById('baseColor').value;
             const style = document.getElementById('style').value;
-            const colors = getCamoColors();
+            const algorithm = document.getElementById('algorithm').value;
+            const colorData = getCamoColors();
 
             // Fill base color
             ctx.fillStyle = baseColor;
@@ -315,48 +423,77 @@
             // Generate pattern based on style
             switch(style) {
                 case 'organic':
-                    generateOrganicCamo(colors);
+                    generateOrganicCamo(colorData, algorithm);
                     break;
                 case 'digital':
-                    generateDigitalCamo(colors);
+                    generateDigitalCamo(colorData, algorithm);
                     break;
                 case 'multi-terrain':
-                    generateMultiTerrainCamo(colors);
+                    generateMultiTerrainCamo(colorData, algorithm);
                     break;
                 case 'image':
-                    generateImagePatternCamo(colors);
+                    generateImagePatternCamo(colorData);
                     break;
             }
         }
 
-        function generateOrganicCamo(colors) {
+        function generateOrganicCamo(colorData, algorithm) {
             const width = canvas.width;
             const height = canvas.height;
             const patternSize = parseInt(document.getElementById('patternSize').value);
 
-            // Generate smooth, flowing camouflage patterns
-            colors.forEach((color, colorIndex) => {
-                ctx.fillStyle = color;
-                const numBlobs = Math.floor((width * height) / (patternSize * patternSize * 2));
+            // Apply algorithm modifications
+            let densityMultiplier = 1.0;
+            let sizeMultiplier = 1.0;
+
+            switch(algorithm) {
+                case 'dense':
+                    densityMultiplier = 2.5;
+                    sizeMultiplier = 0.7;
+                    break;
+                case 'sparse':
+                    densityMultiplier = 0.5;
+                    sizeMultiplier = 1.5;
+                    break;
+                case 'layered':
+                    densityMultiplier = 1.5;
+                    break;
+                case 'spotted':
+                    densityMultiplier = 3.0;
+                    sizeMultiplier = 0.4;
+                    break;
+            }
+
+            colorData.forEach((colorInfo, colorIndex) => {
+                ctx.fillStyle = colorInfo.color;
+                const percentageFactor = colorInfo.percentage / 100;
+                const numBlobs = Math.floor((width * height) / (patternSize * patternSize * 2) * percentageFactor * densityMultiplier);
 
                 for (let i = 0; i < numBlobs; i++) {
-                    const x = Math.random() * (width + patternSize * 2) - patternSize;
-                    const y = Math.random() * (height + patternSize * 2) - patternSize;
+                    let x, y;
 
-                    // Create organic blob using bezier curves
+                    if (algorithm === 'noise') {
+                        // Use noise for positioning
+                        x = (noise(i * 0.1, colorIndex, 1) * 0.8 + 0.1) * width;
+                        y = (noise(i * 0.1, colorIndex, 2) * 0.8 + 0.1) * height;
+                    } else {
+                        x = Math.random() * (width + patternSize * 2) - patternSize;
+                        y = Math.random() * (height + patternSize * 2) - patternSize;
+                    }
+
+                    // Create organic blob
                     ctx.beginPath();
-                    const points = 6 + Math.floor(Math.random() * 4); // 6-9 control points
+                    const points = algorithm === 'spotted' ? 12 : (6 + Math.floor(Math.random() * 4));
                     const angleStep = (Math.PI * 2) / points;
 
                     for (let j = 0; j <= points; j++) {
                         const angle = j * angleStep;
                         const nextAngle = (j + 1) * angleStep;
 
-                        // Randomize radius for organic shape
                         const radiusVar = 0.6 + Math.random() * 0.8;
-                        const radius = patternSize * radiusVar;
+                        const radius = patternSize * radiusVar * sizeMultiplier;
                         const nextRadiusVar = 0.6 + Math.random() * 0.8;
-                        const nextRadius = patternSize * nextRadiusVar;
+                        const nextRadius = patternSize * nextRadiusVar * sizeMultiplier;
 
                         const px = x + Math.cos(angle) * radius;
                         const py = y + Math.sin(angle) * radius;
@@ -366,7 +503,6 @@
                         if (j === 0) {
                             ctx.moveTo(px, py);
                         } else {
-                            // Control points for smooth curves
                             const cp1x = x + Math.cos(angle - angleStep * 0.5) * radius * 1.2;
                             const cp1y = y + Math.sin(angle - angleStep * 0.5) * radius * 1.2;
                             const cp2x = x + Math.cos(angle + angleStep * 0.5) * radius * 1.2;
@@ -379,8 +515,8 @@
                     ctx.closePath();
                     ctx.fill();
 
-                    // Add some transparency variation for depth
-                    if (Math.random() > 0.7) {
+                    // Layered algorithm adds transparency
+                    if (algorithm === 'layered' && Math.random() > 0.5) {
                         ctx.globalAlpha = 0.5;
                         ctx.fill();
                         ctx.globalAlpha = 1.0;
@@ -389,35 +525,52 @@
             });
         }
 
-        function generateDigitalCamo(colors) {
+        function generateDigitalCamo(colorData, algorithm) {
             const pixelSize = parseInt(document.getElementById('pixelSize').value);
             const patternSize = parseInt(document.getElementById('patternSize').value);
             const width = canvas.width;
             const height = canvas.height;
 
-            // Create digital camo with clustered pixels
             const scale = Math.max(1, Math.floor(patternSize / 50));
-            const clusterSize = pixelSize * scale;
+            const noiseScale = algorithm === 'noise' ? 0.05 : 0.1;
 
-            // Use Perlin-like noise for better clustering
-            const noiseScale = 0.1;
+            // Build color array based on percentages
+            const expandedColors = [];
+            colorData.forEach(colorInfo => {
+                const count = Math.floor(colorInfo.percentage);
+                for (let i = 0; i < count; i++) {
+                    expandedColors.push(colorInfo.color);
+                }
+            });
 
             for (let x = 0; x < width; x += pixelSize) {
                 for (let y = 0; y < height; y += pixelSize) {
-                    // Create clusters using sine waves for smoother distribution
-                    const noiseValue = 
-                        Math.sin(x * noiseScale) * Math.cos(y * noiseScale) +
-                        Math.sin(x * noiseScale * 2) * Math.cos(y * noiseScale * 2) * 0.5;
+                    let shouldDraw = false;
+                    let colorIndex = 0;
 
-                    const threshold = Math.sin(patternSize * 0.01) * 0.3;
+                    if (algorithm === 'noise') {
+                        const noiseValue = noise(x * noiseScale, y * noiseScale, 0);
+                        shouldDraw = noiseValue > 0.3;
+                        colorIndex = Math.floor(noiseValue * expandedColors.length) % expandedColors.length;
+                    } else if (algorithm === 'dense') {
+                        shouldDraw = Math.random() > 0.1;
+                        colorIndex = Math.floor(Math.random() * expandedColors.length);
+                    } else if (algorithm === 'sparse') {
+                        shouldDraw = Math.random() > 0.6;
+                        colorIndex = Math.floor(Math.random() * expandedColors.length);
+                    } else {
+                        const noiseValue = 
+                            Math.sin(x * noiseScale) * Math.cos(y * noiseScale) +
+                            Math.sin(x * noiseScale * 2) * Math.cos(y * noiseScale * 2) * 0.5;
+                        const threshold = Math.sin(patternSize * 0.01) * 0.3;
+                        shouldDraw = noiseValue > threshold;
+                        colorIndex = Math.floor((noiseValue + 1) * expandedColors.length / 2) % expandedColors.length;
+                    }
 
-                    if (noiseValue > threshold) {
-                        // Select color based on position and noise
-                        const colorIndex = Math.floor((noiseValue + 1) * colors.length / 2) % colors.length;
-                        ctx.fillStyle = colors[colorIndex];
+                    if (shouldDraw) {
+                        ctx.fillStyle = expandedColors[colorIndex];
 
-                        // Occasionally create larger blocks
-                        if (Math.random() > 0.8) {
+                        if (Math.random() > 0.8 && algorithm !== 'spotted') {
                             ctx.fillRect(x, y, pixelSize * 2, pixelSize * 2);
                         } else {
                             ctx.fillRect(x, y, pixelSize, pixelSize);
@@ -425,29 +578,31 @@
                     }
                 }
             }
-
-            // Add random scattered pixels for texture
-            for (let i = 0; i < (width * height) / (pixelSize * 100); i++) {
-                const x = Math.floor(Math.random() * (width / pixelSize)) * pixelSize;
-                const y = Math.floor(Math.random() * (height / pixelSize)) * pixelSize;
-                ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
-                ctx.fillRect(x, y, pixelSize, pixelSize);
-            }
         }
 
-        function generateMultiTerrainCamo(colors) {
+        function generateMultiTerrainCamo(colorData, algorithm) {
             const width = canvas.width;
             const height = canvas.height;
             const patternSize = parseInt(document.getElementById('patternSize').value);
 
-            // Create larger zones with organic edges
-            colors.forEach(color => {
-                ctx.fillStyle = color;
-                const numZones = Math.floor((width * height) / (patternSize * patternSize * 3));
+            let densityMultiplier = algorithm === 'dense' ? 1.5 : (algorithm === 'sparse' ? 0.5 : 1.0);
+
+            colorData.forEach((colorInfo, index) => {
+                ctx.fillStyle = colorInfo.color;
+                const percentageFactor = colorInfo.percentage / 100;
+                const numZones = Math.floor((width * height) / (patternSize * patternSize * 3) * percentageFactor * densityMultiplier);
 
                 for (let i = 0; i < numZones; i++) {
-                    const x = Math.random() * width;
-                    const y = Math.random() * height;
+                    let x, y;
+
+                    if (algorithm === 'noise') {
+                        x = noise(i * 0.2, index, 3) * width;
+                        y = noise(i * 0.2, index, 4) * height;
+                    } else {
+                        x = Math.random() * width;
+                        y = Math.random() * height;
+                    }
+
                     const w = patternSize * (1 + Math.random() * 2);
                     const h = patternSize * (1 + Math.random() * 2);
 
@@ -462,10 +617,11 @@
                 }
             });
 
-            // Add smaller organic details
-            colors.forEach(color => {
-                ctx.fillStyle = color;
-                const numDetails = Math.floor((width * height) / (patternSize * patternSize));
+            // Add smaller details
+            colorData.slice(0, 2).forEach((colorInfo) => {
+                ctx.fillStyle = colorInfo.color;
+                const percentageFactor = colorInfo.percentage / 100;
+                const numDetails = Math.floor((width * height) / (patternSize * patternSize) * percentageFactor * densityMultiplier);
 
                 for (let i = 0; i < numDetails; i++) {
                     const x = Math.random() * width;
@@ -479,7 +635,7 @@
             });
         }
 
-        function generateImagePatternCamo(colors) {
+        function generateImagePatternCamo(colorData) {
             if (!patternImage) {
                 alert('Please upload an image pattern first');
                 return;
@@ -490,15 +646,20 @@
             const spacing = parseInt(document.getElementById('imageSpacing').value);
             const patternSize = parseInt(document.getElementById('patternSize').value);
 
-            // Scale image to pattern size
             const imgWidth = patternSize;
             const imgHeight = patternSize * (patternImage.height / patternImage.width);
 
-            // Apply color tint using colors
+            const expandedColors = [];
+            colorData.forEach(colorInfo => {
+                const count = Math.floor(colorInfo.percentage / 10);
+                for (let i = 0; i < count; i++) {
+                    expandedColors.push(colorInfo.color);
+                }
+            });
+
             for (let x = 0; x < width; x += imgWidth + spacing) {
                 for (let y = 0; y < height; y += imgHeight + spacing) {
-                    // Random color tint
-                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    const color = expandedColors[Math.floor(Math.random() * expandedColors.length)];
                     ctx.globalAlpha = 0.6;
                     ctx.fillStyle = color;
                     ctx.fillRect(x, y, imgWidth, imgHeight);
