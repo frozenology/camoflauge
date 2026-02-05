@@ -289,7 +289,6 @@
 
         // Preset configurations
         const presets = {
-            // US Military Patterns
             'ucp': {
                 baseColor: '#B5AC98',
                 colors: ['#9C9482', '#8A8776', '#AFA893', '#C7BFA7'],
@@ -338,8 +337,6 @@
                 percentages: [35, 35, 30],
                 style: 'organic'
             },
-
-            // German Patterns
             'flecktarn': {
                 baseColor: '#7C8F6B',
                 colors: ['#4A5F3A', '#6B7C54', '#3D3D2F', '#8B9A7A', '#654321'],
@@ -376,8 +373,6 @@
                 percentages: [30, 25, 25, 20],
                 style: 'organic'
             },
-
-            // General patterns
             woodland: {
                 baseColor: '#8B7355',
                 colors: ['#3d5a3d', '#6b8e23', '#2f4f2f', '#654321'],
@@ -414,8 +409,6 @@
                 percentages: [30, 25, 25, 20],
                 style: 'organic'
             },
-
-            // Russian patterns
             flora: {
                 baseColor: '#7C8F6B',
                 colors: ['#4A5F3A', '#6B7C54', '#3D4E2F', '#8B9A7A'],
@@ -448,13 +441,11 @@
             }
         };
 
-        // Update hex input when color picker changes
         function updateHexInput(colorPicker) {
             const hexInput = colorPicker.parentElement.querySelector('.hex-input');
             hexInput.value = colorPicker.value;
         }
 
-        // Update color picker when hex input changes
         function updateColorPicker(hexInput) {
             const colorPicker = hexInput.parentElement.querySelector('.camo-color');
             if (/^#[0-9A-F]{6}$/i.test(hexInput.value)) {
@@ -462,7 +453,6 @@
             }
         }
 
-        // Update percentage displays
         document.addEventListener('input', function(e) {
             if (e.target.classList.contains('color-percentage')) {
                 const valueSpan = e.target.parentElement.querySelector('.percentage-value');
@@ -470,7 +460,6 @@
             }
         });
 
-        // Handle preset selection
         document.getElementById('preset').addEventListener('change', function() {
             const presetValue = this.value;
             if (presetValue !== 'custom' && presets[presetValue]) {
@@ -484,12 +473,10 @@
                     addColorInput(color, preset.percentages[index]);
                 });
 
-                // Trigger style change to show/hide controls
                 document.getElementById('style').dispatchEvent(new Event('change'));
             }
         });
 
-        // Handle style visibility
         document.getElementById('style').addEventListener('change', function() {
             const style = this.value;
             document.getElementById('pixelSizeGroup').style.display = 
@@ -502,7 +489,6 @@
                 (style === 'organic' || style === 'multi-terrain' || style === 'multicam-crye') ? 'block' : 'none';
         });
 
-        // Image upload handler
         document.getElementById('imageUpload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -553,8 +539,8 @@
                 colors.push({ color, percentage });
             });
 
-            // Sort by percentage in descending order (highest first)
-            colors.sort((a, b) => b.percentage - a.percentage);
+            // Sort by percentage in ASCENDING order (lowest first, highest last)
+            colors.sort((a, b) => a.percentage - b.percentage);
 
             return colors;
         }
@@ -580,7 +566,7 @@
             const baseColor = document.getElementById('baseColor').value;
             const style = document.getElementById('style').value;
             const algorithm = document.getElementById('algorithm').value;
-            const colorData = getCamoColors(); // Already sorted by percentage
+            const colorData = getCamoColors(); // Sorted LOWEST to HIGHEST percentage
 
             ctx.fillStyle = baseColor;
             ctx.fillRect(0, 0, width, height);
@@ -634,6 +620,7 @@
                     break;
             }
 
+            // Colors sorted LOWEST to HIGHEST - small percentages render first (bottom)
             colorData.forEach((colorInfo, colorIndex) => {
                 ctx.fillStyle = colorInfo.color;
                 const percentageFactor = colorInfo.percentage / 100;
@@ -652,16 +639,13 @@
 
                     const blobSize = patternSize * sizeMultiplier * (0.7 + Math.random() * 0.8);
 
-                    // Generate smooth liquid-like blob using more points for higher curvy values
                     const basePoints = algorithm === 'spotted' ? 16 : 8;
-                    const numSegments = basePoints + Math.floor(curvyPercent * 12); // More points = smoother
+                    const numSegments = basePoints + Math.floor(curvyPercent * 12);
                     const points = [];
 
-                    // Generate points with smoother variation for high curvy
                     for (let j = 0; j < numSegments; j++) {
                         const angle = (j / numSegments) * Math.PI * 2;
 
-                        // Smoother radius variation for liquid effect
                         const noiseValue1 = noise(j * 0.3, i * 0.2, colorIndex);
                         const noiseValue2 = noise(j * 0.15, i * 0.1, colorIndex + 100);
                         const radiusVariation = 0.6 + (noiseValue1 * 0.3 + noiseValue2 * 0.2) * (1 + curvyPercent * 0.5);
@@ -677,7 +661,6 @@
                     ctx.beginPath();
                     ctx.moveTo(points[0].x, points[0].y);
 
-                    // Draw with smooth Catmull-Rom-like curves for liquid effect
                     for (let j = 0; j < numSegments; j++) {
                         const p0 = points[(j - 1 + numSegments) % numSegments];
                         const p1 = points[j];
@@ -685,8 +668,7 @@
                         const p3 = points[(j + 2) % numSegments];
 
                         if (curvyPercent > 0.5) {
-                            // High curvy: Ultra-smooth Catmull-Rom curves
-                            const tension = 0.5 * curvyPercent; // Smoothness factor
+                            const tension = 0.5 * curvyPercent;
 
                             const cp1x = p1.x + (p2.x - p0.x) * tension;
                             const cp1y = p1.y + (p2.y - p0.y) * tension;
@@ -695,12 +677,10 @@
 
                             ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
                         } else if (curvyPercent > 0) {
-                            // Medium curvy: Quadratic curves
                             const cpx = (p1.x + p2.x) / 2 + (Math.random() - 0.5) * blobSize * 0.1 * curvyPercent;
                             const cpy = (p1.y + p2.y) / 2 + (Math.random() - 0.5) * blobSize * 0.1 * curvyPercent;
                             ctx.quadraticCurveTo(cpx, cpy, p2.x, p2.y);
                         } else {
-                            // Angular: Straight lines
                             ctx.lineTo(p2.x, p2.y);
                         }
                     }
@@ -708,7 +688,6 @@
                     ctx.closePath();
                     ctx.fill();
 
-                    // Layered algorithm with liquid-like overlaps
                     if (algorithm === 'layered' && Math.random() > 0.5) {
                         const offsetX = x + (Math.random() - 0.5) * blobSize * 0.6;
                         const offsetY = y + (Math.random() - 0.5) * blobSize * 0.6;
@@ -774,7 +753,8 @@
                     break;
             }
 
-            // Layer 1: Large irregular liquid-like base shapes
+            // Colors sorted LOWEST to HIGHEST
+            // Layer 1: Use first 2 colors (smallest percentages)
             colorData.slice(0, 2).forEach((colorInfo, idx) => {
                 ctx.fillStyle = colorInfo.color;
                 ctx.globalAlpha = 0.8;
@@ -798,7 +778,6 @@
                     ctx.translate(x, y);
                     ctx.rotate(angle);
 
-                    // More points for smoother liquid shapes
                     const points = 8 + Math.floor(curvyPercent * 8);
                     const shapePoints = [];
 
@@ -845,7 +824,7 @@
 
             ctx.globalAlpha = 1.0;
 
-            // Layer 2: Medium organic liquid blobs
+            // Layer 2: Next 2 colors
             colorData.slice(2, 4).forEach((colorInfo, idx) => {
                 ctx.fillStyle = colorInfo.color;
 
@@ -902,7 +881,6 @@
                     ctx.closePath();
                     ctx.fill();
 
-                    // Add small detail dots with smooth edges
                     if (Math.random() > 0.5) {
                         ctx.globalAlpha = 0.6;
                         const numDots = 3 + Math.floor(Math.random() * 5);
@@ -925,7 +903,7 @@
                 }
             });
 
-            // Layer 3: Small detailed round spots
+            // Layer 3: Remaining colors (highest percentages - render last on top)
             const detailColors = colorData.length > 4 ? colorData.slice(4) : colorData.slice(0, 2);
 
             detailColors.forEach((colorInfo, idx) => {
@@ -940,7 +918,6 @@
 
                     ctx.globalAlpha = 0.7 + Math.random() * 0.3;
 
-                    // More round spots for high curvy
                     if (curvyPercent > 0.5 || Math.random() > 0.5) {
                         ctx.beginPath();
                         ctx.arc(x, y, size, 0, Math.PI * 2);
@@ -965,7 +942,6 @@
 
             ctx.globalAlpha = 1.0;
 
-            // Layer 4: Fine texture overlay with soft edges
             if (algorithm === 'layered' || algorithm === 'dense') {
                 colorData.forEach(colorInfo => {
                     ctx.fillStyle = colorInfo.color;
@@ -1006,7 +982,7 @@
                     break;
             }
 
-            // Layer 1: Large background shapes
+            // Colors sorted LOWEST to HIGHEST - renders smallest first
             colorData.forEach((colorInfo, idx) => {
                 ctx.fillStyle = colorInfo.color;
                 const percentageFactor = colorInfo.percentage / 100;
@@ -1047,7 +1023,6 @@
                         const next = shapePoints[(j + 1) % points];
 
                         if (curvyPercent > 0.3) {
-                            // Curvy - use quadratic curves
                             const angle = (j / points) * Math.PI * 2;
                             const nextAngle = ((j + 1) / points) * Math.PI * 2;
                             const midAngle = (angle + nextAngle) / 2;
@@ -1057,7 +1032,6 @@
 
                             ctx.quadraticCurveTo(cpx, cpy, next.x, next.y);
                         } else {
-                            // Angular - straight lines
                             ctx.lineTo(next.x, next.y);
                         }
                     }
@@ -1067,7 +1041,6 @@
                 }
             });
 
-            // Layer 2: Medium irregular blobs
             colorData.forEach((colorInfo, idx) => {
                 ctx.fillStyle = colorInfo.color;
                 const percentageFactor = colorInfo.percentage / 100;
@@ -1120,7 +1093,6 @@
                 }
             });
 
-            // Layer 3: Small detail shapes
             if (algorithm === 'layered' || algorithm === 'dense') {
                 colorData.forEach((colorInfo) => {
                     ctx.fillStyle = colorInfo.color;
@@ -1307,7 +1279,6 @@
             }
         }
 
-        // Initial generation
         generateCamo();
     </script>
 
