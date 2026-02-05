@@ -141,17 +141,31 @@
                         <label class="form-label">Preset</label>
                         <select class="form-select" id="preset">
                             <option value="custom">Custom</option>
-                            <option value="woodland">Woodland</option>
-                            <option value="desert">Desert</option>
-                            <option value="urban">Urban</option>
-                            <option value="digital">Digital</option>
-                            <option value="multicam">MultiCam</option>
-                            <option value="navy">Navy Blue</option>
-                            <option value="flora">Russian Flora</option>
-                            <option value="partizan">Russian Partizan</option>
-                            <option value="surpat">Russian SURPAT</option>
-                            <option value="kamysh">Russian Kamysh</option>
-                            <option value="emc">Russian EMR (Digital Flora)</option>
+                            <optgroup label="US Military">
+                                <option value="ucp">UCP (Universal Camouflage Pattern)</option>
+                                <option value="ocp">OCP (Operational Camouflage Pattern)</option>
+                                <option value="marpat-woodland">MARPAT Woodland</option>
+                                <option value="marpat-desert">MARPAT Desert</option>
+                                <option value="aor1">AOR1 (Desert Digital)</option>
+                                <option value="aor2">AOR2 (Woodland Digital)</option>
+                                <option value="m81-woodland">M81 Woodland</option>
+                                <option value="tricolor-desert">3-Color Desert</option>
+                                <option value="multicam">MultiCam</option>
+                            </optgroup>
+                            <optgroup label="General">
+                                <option value="woodland">Woodland</option>
+                                <option value="desert">Desert</option>
+                                <option value="urban">Urban</option>
+                                <option value="digital">Digital</option>
+                                <option value="navy">Navy Blue</option>
+                            </optgroup>
+                            <optgroup label="Russian">
+                                <option value="flora">Russian Flora</option>
+                                <option value="partizan">Russian Partizan</option>
+                                <option value="surpat">Russian SURPAT</option>
+                                <option value="kamysh">Russian Kamysh</option>
+                                <option value="emc">Russian EMR (Digital Flora)</option>
+                            </optgroup>
                         </select>
                     </div>
 
@@ -165,7 +179,7 @@
                     <div class="mb-3">
                         <label class="form-label">Style</label>
                         <select class="form-select" id="style">
-                            <option value="organic">Organic Splash</option>
+                            <option value="organic">Organic Watercolor</option>
                             <option value="treeleaf">Tree Leaf</option>
                             <option value="digital">Digitalize</option>
                             <option value="multi-terrain">Multi-Terrain Brush</option>
@@ -266,6 +280,57 @@
 
         // Preset configurations
         const presets = {
+            // US Military Patterns
+            'ucp': {
+                baseColor: '#B5AC98',
+                colors: ['#9C9482', '#8A8776', '#AFA893', '#C7BFA7'],
+                percentages: [25, 25, 25, 25],
+                style: 'digital'
+            },
+            'ocp': {
+                baseColor: '#A68B60',
+                colors: ['#8D7649', '#B39C6E', '#6A5C3E', '#D4C4A0'],
+                percentages: [25, 25, 25, 25],
+                style: 'multicam-crye'
+            },
+            'marpat-woodland': {
+                baseColor: '#6B7C54',
+                colors: ['#5A6B4A', '#3D4E2F', '#7C8F6B', '#4A5F3A'],
+                percentages: [25, 25, 25, 25],
+                style: 'digital'
+            },
+            'marpat-desert': {
+                baseColor: '#C9B590',
+                colors: ['#B5A079', '#D4C4A0', '#A68B60', '#8D7649'],
+                percentages: [25, 25, 25, 25],
+                style: 'digital'
+            },
+            'aor1': {
+                baseColor: '#D9C7A8',
+                colors: ['#C4B090', '#E5D5B5', '#B09875', '#A08560'],
+                percentages: [25, 25, 25, 25],
+                style: 'digital'
+            },
+            'aor2': {
+                baseColor: '#798C75',
+                colors: ['#5F7A5C', '#8B9E88', '#4A5F47', '#6D8269'],
+                percentages: [25, 25, 25, 25],
+                style: 'digital'
+            },
+            'm81-woodland': {
+                baseColor: '#7C8F6B',
+                colors: ['#4A5F3A', '#3D4E2F', '#6B7C54', '#654321'],
+                percentages: [30, 25, 25, 20],
+                style: 'organic'
+            },
+            'tricolor-desert': {
+                baseColor: '#D4C4A0',
+                colors: ['#C9B590', '#B5A079', '#A68B60'],
+                percentages: [35, 35, 30],
+                style: 'organic'
+            },
+
+            // General patterns
             woodland: {
                 baseColor: '#8B7355',
                 colors: ['#3d5a3d', '#6b8e23', '#2f4f2f', '#654321'],
@@ -302,6 +367,8 @@
                 percentages: [30, 25, 25, 20],
                 style: 'organic'
             },
+
+            // Russian patterns
             flora: {
                 baseColor: '#7C8F6B',
                 colors: ['#4A5F3A', '#6B7C54', '#3D4E2F', '#8B9A7A'],
@@ -466,7 +533,7 @@
 
             switch(style) {
                 case 'organic':
-                    generateOrganicSplashCamo(colorData, algorithm);
+                    generateOrganicWatercolorCamo(colorData, algorithm);
                     break;
                 case 'treeleaf':
                     generateTreeLeafCamo(colorData, algorithm);
@@ -484,6 +551,136 @@
                     generateImagePatternCamo(colorData);
                     break;
             }
+        }
+
+        function generateOrganicWatercolorCamo(colorData, algorithm) {
+            const width = canvas.width;
+            const height = canvas.height;
+            const patternSize = parseInt(document.getElementById('patternSize').value);
+
+            let densityMultiplier = 1.0;
+            let sizeMultiplier = 1.0;
+
+            switch(algorithm) {
+                case 'dense':
+                    densityMultiplier = 2.5;
+                    sizeMultiplier = 0.7;
+                    break;
+                case 'sparse':
+                    densityMultiplier = 0.5;
+                    sizeMultiplier = 1.5;
+                    break;
+                case 'layered':
+                    densityMultiplier = 1.5;
+                    break;
+                case 'spotted':
+                    densityMultiplier = 3.0;
+                    sizeMultiplier = 0.4;
+                    break;
+            }
+
+            colorData.forEach((colorInfo, colorIndex) => {
+                const percentageFactor = colorInfo.percentage / 100;
+                const numBlobs = Math.floor((width * height) / (patternSize * patternSize * 1.5) * percentageFactor * densityMultiplier);
+
+                for (let i = 0; i < numBlobs; i++) {
+                    let x, y;
+
+                    if (algorithm === 'noise') {
+                        x = (noise(i * 0.1, colorIndex, 1) * 0.8 + 0.1) * width;
+                        y = (noise(i * 0.1, colorIndex, 2) * 0.8 + 0.1) * height;
+                    } else {
+                        x = Math.random() * width;
+                        y = Math.random() * height;
+                    }
+
+                    const blobSize = patternSize * sizeMultiplier * (0.8 + Math.random() * 0.8);
+
+                    // Create watercolor effect with radial gradient
+                    const gradient = ctx.createRadialGradient(x, y, 0, x, y, blobSize);
+
+                    // Core color (more opaque)
+                    gradient.addColorStop(0, colorInfo.color);
+                    gradient.addColorStop(0.3, colorInfo.color);
+
+                    // Convert hex to rgba for transparency
+                    const r = parseInt(colorInfo.color.slice(1, 3), 16);
+                    const g = parseInt(colorInfo.color.slice(3, 5), 16);
+                    const b = parseInt(colorInfo.color.slice(5, 7), 16);
+
+                    // Fade to transparent edge (watercolor bleeding effect)
+                    gradient.addColorStop(0.6, `rgba(${r}, ${g}, ${b}, 0.7)`);
+                    gradient.addColorStop(0.85, `rgba(${r}, ${g}, ${b}, 0.3)`);
+                    gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+
+                    ctx.fillStyle = gradient;
+
+                    // Draw organic watercolor blob with soft edges
+                    ctx.beginPath();
+                    const points = 12 + Math.floor(Math.random() * 8);
+
+                    for (let j = 0; j < points; j++) {
+                        const angle = (j / points) * Math.PI * 2;
+                        const nextAngle = ((j + 1) / points) * Math.PI * 2;
+
+                        // Variable radius for organic shape
+                        const radiusVar = 0.5 + noise(j * 0.5, i * 0.1, colorIndex) * 0.8;
+                        const radius = blobSize * radiusVar;
+
+                        const px = x + Math.cos(angle) * radius;
+                        const py = y + Math.sin(angle) * radius;
+
+                        if (j === 0) {
+                            ctx.moveTo(px, py);
+                        } else {
+                            // Use quadratic curves for smooth watercolor-like flow
+                            const prevAngle = ((j - 1) / points) * Math.PI * 2;
+                            const midAngle = (prevAngle + angle) / 2;
+                            const midRadius = blobSize * (0.6 + noise(j * 0.3, i * 0.15, colorIndex) * 0.7);
+                            const cpx = x + Math.cos(midAngle) * midRadius;
+                            const cpy = y + Math.sin(midAngle) * midRadius;
+
+                            ctx.quadraticCurveTo(cpx, cpy, px, py);
+                        }
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Add additional diffusion layer for watercolor effect
+                    if (Math.random() > 0.4) {
+                        const diffusionGradient = ctx.createRadialGradient(
+                            x + (Math.random() - 0.5) * blobSize * 0.3,
+                            y + (Math.random() - 0.5) * blobSize * 0.3,
+                            0,
+                            x,
+                            y,
+                            blobSize * 1.4
+                        );
+
+                        diffusionGradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.3)`);
+                        diffusionGradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.15)`);
+                        diffusionGradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+
+                        ctx.fillStyle = diffusionGradient;
+                        ctx.beginPath();
+                        ctx.arc(x, y, blobSize * 1.4, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    // Layered algorithm adds extra transparent layers
+                    if (algorithm === 'layered' && Math.random() > 0.5) {
+                        const layerGradient = ctx.createRadialGradient(x, y, 0, x, y, blobSize * 0.7);
+                        layerGradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.4)`);
+                        layerGradient.addColorStop(0.7, `rgba(${r}, ${g}, ${b}, 0.2)`);
+                        layerGradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+
+                        ctx.fillStyle = layerGradient;
+                        ctx.beginPath();
+                        ctx.arc(x, y, blobSize * 0.7, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            });
         }
 
         function generateMultiCamCryeCamo(colorData, algorithm) {
@@ -504,7 +701,7 @@
                     break;
             }
 
-            // Layer 1: Large irregular base shapes (background layer)
+            // Layer 1: Large irregular base shapes
             colorData.slice(0, 2).forEach((colorInfo, idx) => {
                 ctx.fillStyle = colorInfo.color;
                 ctx.globalAlpha = 0.8;
@@ -528,7 +725,6 @@
                     ctx.translate(x, y);
                     ctx.rotate(angle);
 
-                    // Draw elongated organic shape
                     ctx.beginPath();
                     const points = 6;
                     for (let j = 0; j < points; j++) {
@@ -558,7 +754,7 @@
 
             ctx.globalAlpha = 1.0;
 
-            // Layer 2: Medium organic blobs (middle layer)
+            // Layer 2: Medium organic blobs
             colorData.slice(2, 4).forEach((colorInfo, idx) => {
                 ctx.fillStyle = colorInfo.color;
 
@@ -576,7 +772,6 @@
 
                     const size = patternSize * (1.2 + Math.random() * 1.8);
 
-                    // Irregular blob
                     ctx.beginPath();
                     const points = 7 + Math.floor(Math.random() * 3);
                     for (let j = 0; j < points; j++) {
@@ -600,7 +795,6 @@
                     ctx.closePath();
                     ctx.fill();
 
-                    // Add texture edge with small dots
                     if (Math.random() > 0.5) {
                         ctx.globalAlpha = 0.6;
                         const numDots = 3 + Math.floor(Math.random() * 5);
@@ -623,7 +817,7 @@
                 }
             });
 
-            // Layer 3: Small detailed spots (top layer - characteristic of MultiCam)
+            // Layer 3: Small detailed spots
             const detailColors = colorData.length > 4 ? colorData.slice(4) : colorData.slice(0, 2);
 
             detailColors.forEach((colorInfo, idx) => {
@@ -636,11 +830,9 @@
                     const y = Math.random() * height;
                     const size = patternSize * (0.15 + Math.random() * 0.35);
 
-                    // Small irregular spots and dots
                     ctx.globalAlpha = 0.7 + Math.random() * 0.3;
 
                     if (Math.random() > 0.3) {
-                        // Irregular small blob
                         ctx.beginPath();
                         const points = 5 + Math.floor(Math.random() * 3);
                         for (let j = 0; j < points; j++) {
@@ -655,7 +847,6 @@
                         ctx.closePath();
                         ctx.fill();
                     } else {
-                        // Simple dot
                         ctx.beginPath();
                         ctx.arc(x, y, size, 0, Math.PI * 2);
                         ctx.fill();
@@ -665,7 +856,7 @@
 
             ctx.globalAlpha = 1.0;
 
-            // Layer 4: Fine texture overlay (very small specks)
+            // Layer 4: Fine texture overlay
             if (algorithm === 'layered' || algorithm === 'dense') {
                 colorData.forEach(colorInfo => {
                     ctx.fillStyle = colorInfo.color;
@@ -685,129 +876,6 @@
             }
 
             ctx.globalAlpha = 1.0;
-        }
-
-        function generateOrganicSplashCamo(colorData, algorithm) {
-            const width = canvas.width;
-            const height = canvas.height;
-            const patternSize = parseInt(document.getElementById('patternSize').value);
-            const trailLength = parseInt(document.getElementById('trailLength').value) / 100;
-
-            let densityMultiplier = 1.0;
-            let sizeMultiplier = 1.0;
-
-            switch(algorithm) {
-                case 'dense':
-                    densityMultiplier = 2.5;
-                    sizeMultiplier = 0.7;
-                    break;
-                case 'sparse':
-                    densityMultiplier = 0.5;
-                    sizeMultiplier = 1.5;
-                    break;
-                case 'layered':
-                    densityMultiplier = 1.5;
-                    break;
-                case 'spotted':
-                    densityMultiplier = 3.0;
-                    sizeMultiplier = 0.4;
-                    break;
-            }
-
-            colorData.forEach((colorInfo, colorIndex) => {
-                ctx.fillStyle = colorInfo.color;
-                ctx.strokeStyle = colorInfo.color;
-                const percentageFactor = colorInfo.percentage / 100;
-                const numSplashes = Math.floor((width * height) / (patternSize * patternSize * 2) * percentageFactor * densityMultiplier);
-
-                for (let i = 0; i < numSplashes; i++) {
-                    let x, y;
-
-                    if (algorithm === 'noise') {
-                        x = (noise(i * 0.1, colorIndex, 1) * 0.8 + 0.1) * width;
-                        y = (noise(i * 0.1, colorIndex, 2) * 0.8 + 0.1) * height;
-                    } else {
-                        x = Math.random() * width;
-                        y = Math.random() * height;
-                    }
-
-                    const splashAngle = Math.random() * Math.PI * 2;
-                    const splashSize = patternSize * sizeMultiplier * (0.6 + Math.random() * 0.8);
-                    const trailLen = splashSize * (1.5 + Math.random() * 2) * trailLength;
-
-                    ctx.save();
-                    ctx.translate(x, y);
-                    ctx.rotate(splashAngle);
-
-                    ctx.beginPath();
-                    const bodyPoints = 8;
-                    for (let j = 0; j < bodyPoints; j++) {
-                        const angle = (j / bodyPoints) * Math.PI * 2;
-                        const radius = splashSize * (0.5 + Math.random() * 0.5);
-                        const px = Math.cos(angle) * radius;
-                        const py = Math.sin(angle) * radius;
-
-                        if (j === 0) ctx.moveTo(px, py);
-                        else ctx.lineTo(px, py);
-                    }
-                    ctx.closePath();
-                    ctx.fill();
-
-                    const trailSegments = 8;
-                    for (let t = 0; t < trailSegments; t++) {
-                        const progress = t / trailSegments;
-                        const trailX = progress * trailLen;
-                        const trailY = (Math.random() - 0.5) * splashSize * 0.3;
-                        const trailSize = splashSize * (1 - progress * 0.7) * (0.3 + Math.random() * 0.4);
-
-                        ctx.globalAlpha = 1 - progress * 0.6;
-
-                        ctx.beginPath();
-                        ctx.arc(trailX, trailY, trailSize, 0, Math.PI * 2);
-                        ctx.fill();
-
-                        if (Math.random() > 0.6) {
-                            const splatterX = trailX + (Math.random() - 0.5) * splashSize;
-                            const splatterY = trailY + (Math.random() - 0.5) * splashSize;
-                            const splatterSize = trailSize * (0.2 + Math.random() * 0.3);
-
-                            ctx.beginPath();
-                            ctx.arc(splatterX, splatterY, splatterSize, 0, Math.PI * 2);
-                            ctx.fill();
-                        }
-                    }
-
-                    const numDrips = Math.floor(Math.random() * 3);
-                    for (let d = 0; d < numDrips; d++) {
-                        const dripAngle = (Math.random() - 0.5) * Math.PI * 0.5;
-                        const dripLength = splashSize * (1 + Math.random() * 2) * trailLength;
-                        const dripWidth = splashSize * (0.1 + Math.random() * 0.2);
-
-                        ctx.globalAlpha = 0.7;
-                        ctx.lineWidth = dripWidth;
-                        ctx.lineCap = 'round';
-
-                        ctx.beginPath();
-                        ctx.moveTo(0, 0);
-                        const dx = Math.cos(dripAngle) * dripLength;
-                        const dy = Math.sin(dripAngle) * dripLength;
-                        ctx.lineTo(dx, dy);
-                        ctx.stroke();
-                    }
-
-                    ctx.globalAlpha = 1.0;
-
-                    if (algorithm === 'layered' && Math.random() > 0.5) {
-                        ctx.globalAlpha = 0.4;
-                        ctx.beginPath();
-                        ctx.arc(0, 0, splashSize * 1.3, 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.globalAlpha = 1.0;
-                    }
-
-                    ctx.restore();
-                }
-            });
         }
 
         function generateMultiTerrainBrushCamo(colorData, algorithm) {
