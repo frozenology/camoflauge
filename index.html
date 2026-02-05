@@ -152,6 +152,14 @@
                                 <option value="tricolor-desert">3-Color Desert</option>
                                 <option value="multicam">MultiCam</option>
                             </optgroup>
+                            <optgroup label="German">
+                                <option value="flecktarn">Flecktarn</option>
+                                <option value="tropentarn">Tropentarn (Desert Fleck)</option>
+                                <option value="splittertarn">Splittertarn (WW2)</option>
+                                <option value="eichenlaubmuster">Eichenlaubmuster (Oak Leaf)</option>
+                                <option value="platanenmuster">Platanenmuster (Plane Tree)</option>
+                                <option value="sumpftarn">Sumpftarn (Swamp)</option>
+                            </optgroup>
                             <optgroup label="General">
                                 <option value="woodland">Woodland</option>
                                 <option value="desert">Desert</option>
@@ -205,6 +213,13 @@
                     <div class="mb-3">
                         <label class="form-label">Pattern Size: <span id="patternSizeValue">50</span></label>
                         <input type="range" class="form-range" id="patternSize" min="10" max="200" value="50" oninput="document.getElementById('patternSizeValue').textContent = this.value">
+                    </div>
+
+                    <!-- Curvy Parameter -->
+                    <div class="mb-3" id="curvyGroup">
+                        <label class="form-label">Curvy: <span id="curvyValue">50</span>%</label>
+                        <input type="range" class="form-range" id="curvy" min="0" max="100" value="50" oninput="document.getElementById('curvyValue').textContent = this.value">
+                        <small class="text-muted">0% = Angular/Sharp, 100% = Very Curvy/Smooth</small>
                     </div>
 
                     <!-- Camo Colors - Horizontal with Percentage -->
@@ -324,6 +339,44 @@
                 style: 'organic'
             },
 
+            // German Patterns
+            'flecktarn': {
+                baseColor: '#7C8F6B',
+                colors: ['#4A5F3A', '#6B7C54', '#3D3D2F', '#8B9A7A', '#654321'],
+                percentages: [25, 22, 20, 18, 15],
+                style: 'organic'
+            },
+            'tropentarn': {
+                baseColor: '#C9B590',
+                colors: ['#B5A079', '#A68B60', '#8D7649', '#654321'],
+                percentages: [30, 25, 25, 20],
+                style: 'organic'
+            },
+            'splittertarn': {
+                baseColor: '#9AA88B',
+                colors: ['#7C8F6B', '#6B7C54', '#4A5F3A', '#654321'],
+                percentages: [30, 25, 25, 20],
+                style: 'multi-terrain'
+            },
+            'eichenlaubmuster': {
+                baseColor: '#8B9478',
+                colors: ['#6B7C54', '#5A6B4A', '#4A5F3A', '#3D4E2F'],
+                percentages: [30, 25, 25, 20],
+                style: 'treeleaf'
+            },
+            'platanenmuster': {
+                baseColor: '#9AA88B',
+                colors: ['#7C8F6B', '#6B7C54', '#5A6B4A', '#4A5F3A'],
+                percentages: [28, 26, 24, 22],
+                style: 'organic'
+            },
+            'sumpftarn': {
+                baseColor: '#6B7C5A',
+                colors: ['#5A6B4A', '#4A5F3A', '#3D4E2F', '#2F3D2F'],
+                percentages: [30, 25, 25, 20],
+                style: 'organic'
+            },
+
             // General patterns
             woodland: {
                 baseColor: '#8B7355',
@@ -430,6 +483,9 @@
                 preset.colors.forEach((color, index) => {
                     addColorInput(color, preset.percentages[index]);
                 });
+
+                // Trigger style change to show/hide controls
+                document.getElementById('style').dispatchEvent(new Event('change'));
             }
         });
 
@@ -442,6 +498,8 @@
                 (style === 'image') ? 'block' : 'none';
             document.getElementById('imageSpacingGroup').style.display = 
                 (style === 'image') ? 'block' : 'none';
+            document.getElementById('curvyGroup').style.display = 
+                (style === 'organic' || style === 'multi-terrain') ? 'block' : 'none';
         });
 
         // Image upload handler
@@ -553,6 +611,7 @@
             const width = canvas.width;
             const height = canvas.height;
             const patternSize = parseInt(document.getElementById('patternSize').value);
+            const curvyPercent = parseInt(document.getElementById('curvy').value) / 100;
 
             let densityMultiplier = 1.0;
             let sizeMultiplier = 1.0;
@@ -575,7 +634,6 @@
                     break;
             }
 
-            // Colors are already sorted by percentage (highest first)
             colorData.forEach((colorInfo, colorIndex) => {
                 ctx.fillStyle = colorInfo.color;
                 const percentageFactor = colorInfo.percentage / 100;
@@ -612,17 +670,39 @@
 
                     ctx.moveTo(points[0].x, points[0].y);
 
-                    for (let j = 0; j < numSegments; j++) {
-                        const current = points[j];
-                        const next = points[(j + 1) % numSegments];
-                        const afterNext = points[(j + 2) % numSegments];
+                    if (curvyPercent > 0.3) {
+                        // Curvy mode - use Bezier curves
+                        for (let j = 0; j < numSegments; j++) {
+                            const current = points[j];
+                            const next = points[(j + 1) % numSegments];
+                            const afterNext = points[(j + 2) % numSegments];
 
-                        const cp1x = current.x + (next.x - current.x) * 0.5 + (Math.random() - 0.5) * blobSize * 0.2;
-                        const cp1y = current.y + (next.y - current.y) * 0.5 + (Math.random() - 0.5) * blobSize * 0.2;
-                        const cp2x = next.x - (afterNext.x - current.x) * 0.15;
-                        const cp2y = next.y - (afterNext.y - current.y) * 0.15;
+                            const randomness = blobSize * 0.2 * curvyPercent;
+                            const cp1x = current.x + (next.x - current.x) * 0.5 + (Math.random() - 0.5) * randomness;
+                            const cp1y = current.y + (next.y - current.y) * 0.5 + (Math.random() - 0.5) * randomness;
+                            const cp2x = next.x - (afterNext.x - current.x) * 0.15 * curvyPercent;
+                            const cp2y = next.y - (afterNext.y - current.y) * 0.15 * curvyPercent;
 
-                        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, next.x, next.y);
+                            ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, next.x, next.y);
+                        }
+                    } else {
+                        // Angular mode - use straight lines with slight smoothing
+                        for (let j = 0; j < numSegments; j++) {
+                            const current = points[j];
+                            const next = points[(j + 1) % numSegments];
+
+                            if (curvyPercent > 0) {
+                                // Slight curve with quadratic
+                                const midAngle = ((j + 0.5) / numSegments) * Math.PI * 2;
+                                const midRadius = blobSize * (0.5 + Math.random() * 0.5) * (1 - curvyPercent * 0.5);
+                                const cpx = x + Math.cos(midAngle) * midRadius;
+                                const cpy = y + Math.sin(midAngle) * midRadius;
+                                ctx.quadraticCurveTo(cpx, cpy, next.x, next.y);
+                            } else {
+                                // Pure angular - straight lines
+                                ctx.lineTo(next.x, next.y);
+                            }
+                        }
                     }
 
                     ctx.closePath();
@@ -641,14 +721,20 @@
                             const px = offsetX + Math.cos(angle) * radius;
                             const py = offsetY + Math.sin(angle) * radius;
 
-                            if (k === 0) ctx.moveTo(px, py);
-                            else {
+                            if (k === 0) {
+                                ctx.moveTo(px, py);
+                            } else {
                                 const prevAngle = ((k - 1) / layerPoints) * Math.PI * 2;
                                 const cpAngle = (prevAngle + angle) / 2;
                                 const cpRadius = layerSize * (0.5 + Math.random() * 0.7);
                                 const cpx = offsetX + Math.cos(cpAngle) * cpRadius;
                                 const cpy = offsetY + Math.sin(cpAngle) * cpRadius;
-                                ctx.quadraticCurveTo(cpx, cpy, px, py);
+
+                                if (curvyPercent > 0.5) {
+                                    ctx.quadraticCurveTo(cpx, cpy, px, py);
+                                } else {
+                                    ctx.lineTo(px, py);
+                                }
                             }
                         }
                         ctx.closePath();
@@ -662,6 +748,7 @@
             const width = canvas.width;
             const height = canvas.height;
             const patternSize = parseInt(document.getElementById('patternSize').value);
+            const curvyPercent = parseInt(document.getElementById('curvy').value) / 100;
 
             let densityMultiplier = 1.0;
             switch(algorithm) {
@@ -676,7 +763,6 @@
                     break;
             }
 
-            // Colors are already sorted by percentage (highest first)
             // Layer 1: Large background shapes
             colorData.forEach((colorInfo, idx) => {
                 ctx.fillStyle = colorInfo.color;
@@ -697,11 +783,10 @@
 
                     ctx.beginPath();
                     const points = 6 + Math.floor(Math.random() * 4);
+
+                    const shapePoints = [];
                     for (let j = 0; j < points; j++) {
                         const angle = (j / points) * Math.PI * 2;
-                        const nextAngle = ((j + 1) / points) * Math.PI * 2;
-                        const midAngle = (angle + nextAngle) / 2;
-
                         const radiusX = size * (0.7 + Math.random() * 0.6);
                         const radiusY = size * 0.5 * (0.6 + Math.random() * 0.8);
                         const rotation = Math.random() * Math.PI * 2;
@@ -709,16 +794,31 @@
                         const px = x + (Math.cos(angle) * radiusX * Math.cos(rotation) - Math.sin(angle) * radiusY * Math.sin(rotation));
                         const py = y + (Math.cos(angle) * radiusX * Math.sin(rotation) + Math.sin(angle) * radiusY * Math.cos(rotation));
 
-                        const midRadius = (radiusX + radiusY) / 2 * (0.8 + Math.random() * 0.4);
-                        const cpx = x + Math.cos(midAngle) * midRadius;
-                        const cpy = y + Math.sin(midAngle) * midRadius;
-
-                        const npx = x + (Math.cos(nextAngle) * radiusX * Math.cos(rotation) - Math.sin(nextAngle) * radiusY * Math.sin(rotation));
-                        const npy = y + (Math.cos(nextAngle) * radiusX * Math.sin(rotation) + Math.sin(nextAngle) * radiusY * Math.cos(rotation));
-
-                        if (j === 0) ctx.moveTo(px, py);
-                        ctx.quadraticCurveTo(cpx, cpy, npx, npy);
+                        shapePoints.push({ x: px, y: py });
                     }
+
+                    ctx.moveTo(shapePoints[0].x, shapePoints[0].y);
+
+                    for (let j = 0; j < points; j++) {
+                        const current = shapePoints[j];
+                        const next = shapePoints[(j + 1) % points];
+
+                        if (curvyPercent > 0.3) {
+                            // Curvy - use quadratic curves
+                            const angle = (j / points) * Math.PI * 2;
+                            const nextAngle = ((j + 1) / points) * Math.PI * 2;
+                            const midAngle = (angle + nextAngle) / 2;
+                            const midRadius = (size * 0.6) * (0.8 + Math.random() * 0.4) * curvyPercent;
+                            const cpx = x + Math.cos(midAngle) * midRadius;
+                            const cpy = y + Math.sin(midAngle) * midRadius;
+
+                            ctx.quadraticCurveTo(cpx, cpy, next.x, next.y);
+                        } else {
+                            // Angular - straight lines
+                            ctx.lineTo(next.x, next.y);
+                        }
+                    }
+
                     ctx.closePath();
                     ctx.fill();
                 }
@@ -744,22 +844,34 @@
 
                     ctx.beginPath();
                     const points = 5 + Math.floor(Math.random() * 5);
+
+                    const shapePoints = [];
                     for (let j = 0; j < points; j++) {
                         const angle = (j / points) * Math.PI * 2;
                         const radius = size * (0.6 + Math.random() * 0.8);
                         const px = x + Math.cos(angle) * radius;
                         const py = y + Math.sin(angle) * radius;
+                        shapePoints.push({ x: px, y: py });
+                    }
 
-                        if (j === 0) ctx.moveTo(px, py);
-                        else {
-                            const prevAngle = ((j - 1) / points) * Math.PI * 2;
+                    ctx.moveTo(shapePoints[0].x, shapePoints[0].y);
+
+                    for (let j = 0; j < points; j++) {
+                        const next = shapePoints[(j + 1) % points];
+
+                        if (curvyPercent > 0.3) {
+                            const prevAngle = ((j - 1 + points) / points) * Math.PI * 2;
+                            const angle = (j / points) * Math.PI * 2;
                             const cpAngle = (prevAngle + angle) / 2;
-                            const cpRadius = size * (0.5 + Math.random() * 0.7);
+                            const cpRadius = size * (0.5 + Math.random() * 0.7) * curvyPercent;
                             const cpx = x + Math.cos(cpAngle) * cpRadius;
                             const cpy = y + Math.sin(cpAngle) * cpRadius;
-                            ctx.quadraticCurveTo(cpx, cpy, px, py);
+                            ctx.quadraticCurveTo(cpx, cpy, next.x, next.y);
+                        } else {
+                            ctx.lineTo(next.x, next.y);
                         }
                     }
+
                     ctx.closePath();
                     ctx.fill();
                 }
@@ -813,7 +925,6 @@
                     break;
             }
 
-            // Colors are already sorted by percentage (highest first)
             // Layer 1: Large irregular base shapes
             colorData.slice(0, 2).forEach((colorInfo, idx) => {
                 ctx.fillStyle = colorInfo.color;
@@ -998,7 +1109,6 @@
 
             let densityMultiplier = algorithm === 'dense' ? 2.0 : (algorithm === 'sparse' ? 0.6 : 1.2);
 
-            // Colors are already sorted by percentage (highest first)
             colorData.forEach((colorInfo, colorIndex) => {
                 ctx.fillStyle = colorInfo.color;
                 const percentageFactor = colorInfo.percentage / 100;
@@ -1069,7 +1179,6 @@
             const scale = Math.max(1, Math.floor(patternSize / 50));
             const noiseScale = algorithm === 'noise' ? 0.05 : 0.1;
 
-            // Colors are already sorted by percentage (highest first)
             const expandedColors = [];
             colorData.forEach(colorInfo => {
                 const count = Math.floor(colorInfo.percentage);
@@ -1129,7 +1238,6 @@
             const imgWidth = patternSize;
             const imgHeight = patternSize * (patternImage.height / patternImage.width);
 
-            // Colors are already sorted by percentage (highest first)
             const expandedColors = [];
             colorData.forEach(colorInfo => {
                 const count = Math.floor(colorInfo.percentage / 10);
