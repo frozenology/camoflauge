@@ -52,7 +52,13 @@
             border-radius: 8px;
             cursor: pointer;
         }
-        .color-item button {
+        .color-item input[type="text"] {
+            width: 80px;
+            font-size: 11px;
+            text-align: center;
+            font-family: monospace;
+        }
+        .color-item button.btn-danger {
             width: 60px;
         }
         .color-item .percentage-control {
@@ -83,6 +89,19 @@
             max-width: 100%;
             max-height: 100%;
         }
+        .navbar-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .navbar-controls input {
+            width: 80px;
+        }
+        .navbar-controls label {
+            color: white;
+            margin: 0;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -90,6 +109,13 @@
     <nav class="navbar navbar-dark bg-dark">
         <div class="container-fluid">
             <span class="navbar-brand mb-0 h1">🎨 Camouflage Pattern Generator</span>
+            <div class="navbar-controls">
+                <label>Width:</label>
+                <input type="number" class="form-control form-control-sm" id="width" value="1024" min="100" max="2000">
+                <label>Height:</label>
+                <input type="number" class="form-control form-control-sm" id="height" value="1024" min="100" max="2000">
+                <button class="btn btn-success btn-sm" onclick="saveImage()">💾 Save</button>
+            </div>
         </div>
     </nav>
 
@@ -98,7 +124,7 @@
             <!-- Left Panel - Canvas Display -->
             <div class="col-lg-8 mb-3">
                 <div class="canvas-container">
-                    <canvas id="camoCanvas" width="800" height="600"></canvas>
+                    <canvas id="camoCanvas" width="1024" height="1024"></canvas>
                 </div>
             </div>
 
@@ -129,7 +155,10 @@
                     <!-- Base Color -->
                     <div class="mb-3">
                         <label class="form-label">Base Color</label>
-                        <input type="color" class="form-control form-control-color" id="baseColor" value="#8B7355">
+                        <div class="d-flex gap-2">
+                            <input type="color" class="form-control form-control-color" id="baseColor" value="#8B7355" onchange="updateBaseColorHex()">
+                            <input type="text" class="form-control" id="baseColorHex" value="#8B7355" onchange="updateBaseColorFromHex()">
+                        </div>
                     </div>
 
                     <!-- Style -->
@@ -156,30 +185,19 @@
                         </select>
                     </div>
 
-                    <!-- Dimensions -->
-                    <div class="row mb-3">
-                        <div class="col-6">
-                            <label class="form-label">Width</label>
-                            <input type="number" class="form-control" id="width" value="800" min="100" max="2000">
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label">Height</label>
-                            <input type="number" class="form-control" id="height" value="600" min="100" max="2000">
-                        </div>
-                    </div>
-
                     <!-- Pattern Size -->
                     <div class="mb-3">
                         <label class="form-label">Pattern Size: <span id="patternSizeValue">50</span></label>
                         <input type="range" class="form-range" id="patternSize" min="10" max="200" value="50" oninput="document.getElementById('patternSizeValue').textContent = this.value">
                     </div>
 
-                    <!-- Camo Colors - Horizontal with Percentage -->
+                    <!-- Camo Colors - Horizontal with Percentage and Hex -->
                     <div class="mb-3">
-                        <label class="form-label">Camo Colors (with percentage)</label>
+                        <label class="form-label">Camo Colors</label>
                         <div class="color-inputs-container" id="colorInputs">
                             <div class="color-item">
-                                <input type="color" class="camo-color" value="#3d5a3d">
+                                <input type="color" class="camo-color" value="#3d5a3d" onchange="updateColorHex(this)">
+                                <input type="text" class="camo-color-hex form-control" value="#3d5a3d" onchange="updateColorFromHex(this)">
                                 <div class="percentage-control">
                                     <input type="range" class="color-percentage" min="1" max="100" value="33">
                                     <small><span class="percentage-value">33</span>%</small>
@@ -187,7 +205,8 @@
                                 <button class="btn btn-sm btn-danger" onclick="removeColor(this)">×</button>
                             </div>
                             <div class="color-item">
-                                <input type="color" class="camo-color" value="#6b8e23">
+                                <input type="color" class="camo-color" value="#6b8e23" onchange="updateColorHex(this)">
+                                <input type="text" class="camo-color-hex form-control" value="#6b8e23" onchange="updateColorFromHex(this)">
                                 <div class="percentage-control">
                                     <input type="range" class="color-percentage" min="1" max="100" value="33">
                                     <small><span class="percentage-value">33</span>%</small>
@@ -195,7 +214,8 @@
                                 <button class="btn btn-sm btn-danger" onclick="removeColor(this)">×</button>
                             </div>
                             <div class="color-item">
-                                <input type="color" class="camo-color" value="#2f4f2f">
+                                <input type="color" class="camo-color" value="#2f4f2f" onchange="updateColorHex(this)">
+                                <input type="text" class="camo-color-hex form-control" value="#2f4f2f" onchange="updateColorFromHex(this)">
                                 <div class="percentage-control">
                                     <input type="range" class="color-percentage" min="1" max="100" value="34">
                                     <small><span class="percentage-value">34</span>%</small>
@@ -238,6 +258,39 @@
         let canvas = document.getElementById('camoCanvas');
         let ctx = canvas.getContext('2d');
         let patternImage = null;
+
+        // Hex color functions
+        function updateBaseColorHex() {
+            document.getElementById('baseColorHex').value = document.getElementById('baseColor').value.toUpperCase();
+        }
+
+        function updateBaseColorFromHex() {
+            const hex = document.getElementById('baseColorHex').value;
+            if (/^#[0-9A-F]{6}$/i.test(hex)) {
+                document.getElementById('baseColor').value = hex;
+            }
+        }
+
+        function updateColorHex(colorInput) {
+            const hexInput = colorInput.parentElement.querySelector('.camo-color-hex');
+            hexInput.value = colorInput.value.toUpperCase();
+        }
+
+        function updateColorFromHex(hexInput) {
+            const hex = hexInput.value;
+            if (/^#[0-9A-F]{6}$/i.test(hex)) {
+                const colorInput = hexInput.parentElement.querySelector('.camo-color');
+                colorInput.value = hex;
+            }
+        }
+
+        // Save image function
+        function saveImage() {
+            const link = document.createElement('a');
+            link.download = 'camouflage_' + Date.now() + '.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
 
         // Preset configurations
         const presets = {
@@ -323,6 +376,7 @@
             if (presetValue !== 'custom' && presets[presetValue]) {
                 const preset = presets[presetValue];
                 document.getElementById('baseColor').value = preset.baseColor;
+                document.getElementById('baseColorHex').value = preset.baseColor.toUpperCase();
                 document.getElementById('style').value = preset.style;
 
                 // Update colors with percentages
@@ -372,7 +426,8 @@
             const div = document.createElement('div');
             div.className = 'color-item';
             div.innerHTML = `
-                <input type="color" class="camo-color" value="${color}">
+                <input type="color" class="camo-color" value="${color}" onchange="updateColorHex(this)">
+                <input type="text" class="camo-color-hex form-control" value="${color.toUpperCase()}" onchange="updateColorFromHex(this)">
                 <div class="percentage-control">
                     <input type="range" class="color-percentage" min="1" max="100" value="${percentage}">
                     <small><span class="percentage-value">${percentage}</span>%</small>
@@ -473,7 +528,6 @@
                     let x, y;
 
                     if (algorithm === 'noise') {
-                        // Use noise for positioning
                         x = (noise(i * 0.1, colorIndex, 1) * 0.8 + 0.1) * width;
                         y = (noise(i * 0.1, colorIndex, 2) * 0.8 + 0.1) * height;
                     } else {
@@ -587,12 +641,13 @@
 
             let densityMultiplier = algorithm === 'dense' ? 1.5 : (algorithm === 'sparse' ? 0.5 : 1.0);
 
+            // First pass: Create large irregular paint-like strokes
             colorData.forEach((colorInfo, index) => {
                 ctx.fillStyle = colorInfo.color;
                 const percentageFactor = colorInfo.percentage / 100;
-                const numZones = Math.floor((width * height) / (patternSize * patternSize * 3) * percentageFactor * densityMultiplier);
+                const numStrokes = Math.floor((width * height) / (patternSize * patternSize * 4) * percentageFactor * densityMultiplier);
 
-                for (let i = 0; i < numZones; i++) {
+                for (let i = 0; i < numStrokes; i++) {
                     let x, y;
 
                     if (algorithm === 'noise') {
@@ -603,35 +658,117 @@
                         y = Math.random() * height;
                     }
 
-                    const w = patternSize * (1 + Math.random() * 2);
-                    const h = patternSize * (1 + Math.random() * 2);
-
-                    ctx.save();
-                    ctx.translate(x, y);
-                    ctx.rotate(Math.random() * Math.PI * 2);
-
+                    // Create irregular paint stroke shape
                     ctx.beginPath();
-                    ctx.ellipse(0, 0, w, h, 0, 0, Math.PI * 2);
+                    const strokePoints = 8 + Math.floor(Math.random() * 6);
+                    const baseRadius = patternSize * (1.5 + Math.random() * 2);
+
+                    for (let j = 0; j <= strokePoints; j++) {
+                        const angle = (j / strokePoints) * Math.PI * 2;
+                        const nextAngle = ((j + 1) / strokePoints) * Math.PI * 2;
+
+                        // Highly variable radius for paint splatter effect
+                        const radiusVar = 0.4 + Math.random() * 1.2;
+                        const radius = baseRadius * radiusVar;
+                        const nextRadiusVar = 0.4 + Math.random() * 1.2;
+                        const nextRadius = baseRadius * nextRadiusVar;
+
+                        const px = x + Math.cos(angle) * radius;
+                        const py = y + Math.sin(angle) * radius;
+                        const npx = x + Math.cos(nextAngle) * nextRadius;
+                        const npy = y + Math.sin(nextAngle) * nextRadius;
+
+                        if (j === 0) {
+                            ctx.moveTo(px, py);
+                        } else {
+                            // Use quadratic curves for smoother paint edges
+                            const cpAngle = angle + (nextAngle - angle) / 2;
+                            const cpRadius = (radius + nextRadius) / 2 * (0.8 + Math.random() * 0.4);
+                            const cpx = x + Math.cos(cpAngle) * cpRadius;
+                            const cpy = y + Math.sin(cpAngle) * cpRadius;
+
+                            ctx.quadraticCurveTo(cpx, cpy, npx, npy);
+                        }
+                    }
+
+                    ctx.closePath();
                     ctx.fill();
-                    ctx.restore();
+
+                    // Add paint texture with random smaller splatters
+                    if (Math.random() > 0.6) {
+                        for (let k = 0; k < 3; k++) {
+                            const splatterX = x + (Math.random() - 0.5) * baseRadius * 1.5;
+                            const splatterY = y + (Math.random() - 0.5) * baseRadius * 1.5;
+                            const splatterSize = patternSize * 0.3 * (0.5 + Math.random() * 0.5);
+
+                            ctx.beginPath();
+                            ctx.arc(splatterX, splatterY, splatterSize, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
                 }
             });
 
-            // Add smaller details
-            colorData.slice(0, 2).forEach((colorInfo) => {
+            // Second pass: Add flowing transition areas
+            colorData.slice(0, Math.min(2, colorData.length)).forEach((colorInfo) => {
                 ctx.fillStyle = colorInfo.color;
+                ctx.globalAlpha = 0.4;
                 const percentageFactor = colorInfo.percentage / 100;
-                const numDetails = Math.floor((width * height) / (patternSize * patternSize) * percentageFactor * densityMultiplier);
+                const numFlows = Math.floor((width * height) / (patternSize * patternSize * 6) * percentageFactor);
 
-                for (let i = 0; i < numDetails; i++) {
+                for (let i = 0; i < numFlows; i++) {
                     const x = Math.random() * width;
                     const y = Math.random() * height;
-                    const size = patternSize * 0.5 * (0.5 + Math.random());
 
+                    // Create elongated flowing shapes
+                    ctx.beginPath();
+                    const flowLength = patternSize * (2 + Math.random() * 3);
+                    const flowWidth = patternSize * (0.5 + Math.random() * 0.8);
+                    const flowAngle = Math.random() * Math.PI * 2;
+
+                    ctx.save();
+                    ctx.translate(x, y);
+                    ctx.rotate(flowAngle);
+
+                    // Draw flowing brush stroke
+                    ctx.moveTo(-flowLength / 2, 0);
+                    ctx.bezierCurveTo(
+                        -flowLength / 4, -flowWidth,
+                        flowLength / 4, -flowWidth,
+                        flowLength / 2, 0
+                    );
+                    ctx.bezierCurveTo(
+                        flowLength / 4, flowWidth,
+                        -flowLength / 4, flowWidth,
+                        -flowLength / 2, 0
+                    );
+
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                ctx.globalAlpha = 1.0;
+            });
+
+            // Third pass: Add fine texture spots
+            colorData.forEach((colorInfo) => {
+                ctx.fillStyle = colorInfo.color;
+                const percentageFactor = colorInfo.percentage / 100;
+                const numSpots = Math.floor((width * height) / (patternSize * patternSize * 2) * percentageFactor * densityMultiplier);
+
+                for (let i = 0; i < numSpots; i++) {
+                    const x = Math.random() * width;
+                    const y = Math.random() * height;
+                    const size = patternSize * 0.15 * (0.3 + Math.random() * 0.7);
+
+                    ctx.globalAlpha = 0.6 + Math.random() * 0.4;
                     ctx.beginPath();
                     ctx.arc(x, y, size, 0, Math.PI * 2);
                     ctx.fill();
                 }
+
+                ctx.globalAlpha = 1.0;
             });
         }
 
