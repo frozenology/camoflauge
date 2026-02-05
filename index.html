@@ -179,10 +179,10 @@
                     <div class="mb-3">
                         <label class="form-label">Style</label>
                         <select class="form-select" id="style">
-                            <option value="organic">Organic Watercolor</option>
+                            <option value="organic">Organic Curve</option>
                             <option value="treeleaf">Tree Leaf</option>
                             <option value="digital">Digitalize</option>
-                            <option value="multi-terrain">Multi-Terrain Brush</option>
+                            <option value="multi-terrain">Multi-Terrain</option>
                             <option value="multicam-crye">MultiCam Crye Precision</option>
                             <option value="image">Image Pattern</option>
                         </select>
@@ -205,12 +205,6 @@
                     <div class="mb-3">
                         <label class="form-label">Pattern Size: <span id="patternSizeValue">50</span></label>
                         <input type="range" class="form-range" id="patternSize" min="10" max="200" value="50" oninput="document.getElementById('patternSizeValue').textContent = this.value">
-                    </div>
-
-                    <!-- Brush Trail Length -->
-                    <div class="mb-3" id="trailLengthGroup">
-                        <label class="form-label">Brush Trail Length: <span id="trailLengthValue">100</span>%</label>
-                        <input type="range" class="form-range" id="trailLength" min="20" max="300" value="100" oninput="document.getElementById('trailLengthValue').textContent = this.value">
                     </div>
 
                     <!-- Camo Colors - Horizontal with Percentage -->
@@ -448,8 +442,6 @@
                 (style === 'image') ? 'block' : 'none';
             document.getElementById('imageSpacingGroup').style.display = 
                 (style === 'image') ? 'block' : 'none';
-            document.getElementById('trailLengthGroup').style.display = 
-                (style === 'organic' || style === 'multi-terrain') ? 'block' : 'none';
         });
 
         // Image upload handler
@@ -533,7 +525,7 @@
 
             switch(style) {
                 case 'organic':
-                    generateOrganicWatercolorCamo(colorData, algorithm);
+                    generateOrganicCurveCamo(colorData, algorithm);
                     break;
                 case 'treeleaf':
                     generateTreeLeafCamo(colorData, algorithm);
@@ -542,7 +534,7 @@
                     generateDigitalCamo(colorData, algorithm);
                     break;
                 case 'multi-terrain':
-                    generateMultiTerrainBrushCamo(colorData, algorithm);
+                    generateMultiTerrainCamo(colorData, algorithm);
                     break;
                 case 'multicam-crye':
                     generateMultiCamCryeCamo(colorData, algorithm);
@@ -553,7 +545,7 @@
             }
         }
 
-        function generateOrganicWatercolorCamo(colorData, algorithm) {
+        function generateOrganicCurveCamo(colorData, algorithm) {
             const width = canvas.width;
             const height = canvas.height;
             const patternSize = parseInt(document.getElementById('patternSize').value);
@@ -580,6 +572,7 @@
             }
 
             colorData.forEach((colorInfo, colorIndex) => {
+                ctx.fillStyle = colorInfo.color;
                 const percentageFactor = colorInfo.percentage / 100;
                 const numBlobs = Math.floor((width * height) / (patternSize * patternSize * 1.5) * percentageFactor * densityMultiplier);
 
@@ -594,93 +587,212 @@
                         y = Math.random() * height;
                     }
 
-                    const blobSize = patternSize * sizeMultiplier * (0.8 + Math.random() * 0.8);
+                    const blobSize = patternSize * sizeMultiplier * (0.7 + Math.random() * 0.8);
 
-                    // Create watercolor effect with radial gradient
-                    const gradient = ctx.createRadialGradient(x, y, 0, x, y, blobSize);
-
-                    // Core color (more opaque)
-                    gradient.addColorStop(0, colorInfo.color);
-                    gradient.addColorStop(0.3, colorInfo.color);
-
-                    // Convert hex to rgba for transparency
-                    const r = parseInt(colorInfo.color.slice(1, 3), 16);
-                    const g = parseInt(colorInfo.color.slice(3, 5), 16);
-                    const b = parseInt(colorInfo.color.slice(5, 7), 16);
-
-                    // Fade to transparent edge (watercolor bleeding effect)
-                    gradient.addColorStop(0.6, `rgba(${r}, ${g}, ${b}, 0.7)`);
-                    gradient.addColorStop(0.85, `rgba(${r}, ${g}, ${b}, 0.3)`);
-                    gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
-
-                    ctx.fillStyle = gradient;
-
-                    // Draw organic watercolor blob with soft edges
+                    // Draw smooth organic blob with Bezier curves
                     ctx.beginPath();
-                    const points = 12 + Math.floor(Math.random() * 8);
 
+                    const numSegments = algorithm === 'spotted' ? 16 : (8 + Math.floor(Math.random() * 8));
+                    const points = [];
+
+                    // Generate random points around center
+                    for (let j = 0; j < numSegments; j++) {
+                        const angle = (j / numSegments) * Math.PI * 2;
+                        const radiusVariation = 0.4 + noise(j * 0.8, i * 0.3, colorIndex) * 1.2;
+                        const radius = blobSize * radiusVariation;
+
+                        points.push({
+                            x: x + Math.cos(angle) * radius,
+                            y: y + Math.sin(angle) * radius
+                        });
+                    }
+
+                    // Draw with smooth Bezier curves
+                    ctx.moveTo(points[0].x, points[0].y);
+
+                    for (let j = 0; j < numSegments; j++) {
+                        const current = points[j];
+                        const next = points[(j + 1) % numSegments];
+                        const afterNext = points[(j + 2) % numSegments];
+
+                        // Calculate control points for smooth curve
+                        const cp1x = current.x + (next.x - current.x) * 0.5 + (Math.random() - 0.5) * blobSize * 0.2;
+                        const cp1y = current.y + (next.y - current.y) * 0.5 + (Math.random() - 0.5) * blobSize * 0.2;
+                        const cp2x = next.x - (afterNext.x - current.x) * 0.15;
+                        const cp2y = next.y - (afterNext.y - current.y) * 0.15;
+
+                        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, next.x, next.y);
+                    }
+
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Layered algorithm adds overlapping blobs
+                    if (algorithm === 'layered' && Math.random() > 0.5) {
+                        const offsetX = x + (Math.random() - 0.5) * blobSize * 0.6;
+                        const offsetY = y + (Math.random() - 0.5) * blobSize * 0.6;
+                        const layerSize = blobSize * 0.7;
+
+                        ctx.beginPath();
+                        const layerPoints = 6 + Math.floor(Math.random() * 6);
+                        for (let k = 0; k < layerPoints; k++) {
+                            const angle = (k / layerPoints) * Math.PI * 2;
+                            const radius = layerSize * (0.6 + Math.random() * 0.8);
+                            const px = offsetX + Math.cos(angle) * radius;
+                            const py = offsetY + Math.sin(angle) * radius;
+
+                            if (k === 0) ctx.moveTo(px, py);
+                            else {
+                                const prevAngle = ((k - 1) / layerPoints) * Math.PI * 2;
+                                const cpAngle = (prevAngle + angle) / 2;
+                                const cpRadius = layerSize * (0.5 + Math.random() * 0.7);
+                                const cpx = offsetX + Math.cos(cpAngle) * cpRadius;
+                                const cpy = offsetY + Math.sin(cpAngle) * cpRadius;
+                                ctx.quadraticCurveTo(cpx, cpy, px, py);
+                            }
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                }
+            });
+        }
+
+        function generateMultiTerrainCamo(colorData, algorithm) {
+            const width = canvas.width;
+            const height = canvas.height;
+            const patternSize = parseInt(document.getElementById('patternSize').value);
+
+            let densityMultiplier = 1.0;
+            switch(algorithm) {
+                case 'dense':
+                    densityMultiplier = 1.8;
+                    break;
+                case 'sparse':
+                    densityMultiplier = 0.5;
+                    break;
+                case 'layered':
+                    densityMultiplier = 1.4;
+                    break;
+            }
+
+            // Layer 1: Large background shapes
+            colorData.forEach((colorInfo, idx) => {
+                ctx.fillStyle = colorInfo.color;
+                const percentageFactor = colorInfo.percentage / 100;
+                const numLargeShapes = Math.floor((width * height) / (patternSize * patternSize * 5) * percentageFactor * densityMultiplier * 0.6);
+
+                for (let i = 0; i < numLargeShapes; i++) {
+                    let x, y;
+                    if (algorithm === 'noise') {
+                        x = noise(i * 0.1, idx, 20) * width;
+                        y = noise(i * 0.1, idx, 21) * height;
+                    } else {
+                        x = Math.random() * width;
+                        y = Math.random() * height;
+                    }
+
+                    const size = patternSize * (2.5 + Math.random() * 3);
+
+                    // Large elongated organic shape
+                    ctx.beginPath();
+                    const points = 6 + Math.floor(Math.random() * 4);
                     for (let j = 0; j < points; j++) {
                         const angle = (j / points) * Math.PI * 2;
                         const nextAngle = ((j + 1) / points) * Math.PI * 2;
+                        const midAngle = (angle + nextAngle) / 2;
 
-                        // Variable radius for organic shape
-                        const radiusVar = 0.5 + noise(j * 0.5, i * 0.1, colorIndex) * 0.8;
-                        const radius = blobSize * radiusVar;
+                        const radiusX = size * (0.7 + Math.random() * 0.6);
+                        const radiusY = size * 0.5 * (0.6 + Math.random() * 0.8);
+                        const rotation = Math.random() * Math.PI * 2;
 
+                        const px = x + (Math.cos(angle) * radiusX * Math.cos(rotation) - Math.sin(angle) * radiusY * Math.sin(rotation));
+                        const py = y + (Math.cos(angle) * radiusX * Math.sin(rotation) + Math.sin(angle) * radiusY * Math.cos(rotation));
+
+                        const midRadius = (radiusX + radiusY) / 2 * (0.8 + Math.random() * 0.4);
+                        const cpx = x + Math.cos(midAngle) * midRadius;
+                        const cpy = y + Math.sin(midAngle) * midRadius;
+
+                        const npx = x + (Math.cos(nextAngle) * radiusX * Math.cos(rotation) - Math.sin(nextAngle) * radiusY * Math.sin(rotation));
+                        const npy = y + (Math.cos(nextAngle) * radiusX * Math.sin(rotation) + Math.sin(nextAngle) * radiusY * Math.cos(rotation));
+
+                        if (j === 0) ctx.moveTo(px, py);
+                        ctx.quadraticCurveTo(cpx, cpy, npx, npy);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            });
+
+            // Layer 2: Medium irregular blobs
+            colorData.forEach((colorInfo, idx) => {
+                ctx.fillStyle = colorInfo.color;
+                const percentageFactor = colorInfo.percentage / 100;
+                const numMediumShapes = Math.floor((width * height) / (patternSize * patternSize * 2.5) * percentageFactor * densityMultiplier);
+
+                for (let i = 0; i < numMediumShapes; i++) {
+                    let x, y;
+                    if (algorithm === 'noise') {
+                        x = noise(i * 0.15, idx, 22) * width;
+                        y = noise(i * 0.15, idx, 23) * height;
+                    } else {
+                        x = Math.random() * width;
+                        y = Math.random() * height;
+                    }
+
+                    const size = patternSize * (0.8 + Math.random() * 1.5);
+
+                    ctx.beginPath();
+                    const points = 5 + Math.floor(Math.random() * 5);
+                    for (let j = 0; j < points; j++) {
+                        const angle = (j / points) * Math.PI * 2;
+                        const radius = size * (0.6 + Math.random() * 0.8);
                         const px = x + Math.cos(angle) * radius;
                         const py = y + Math.sin(angle) * radius;
 
-                        if (j === 0) {
-                            ctx.moveTo(px, py);
-                        } else {
-                            // Use quadratic curves for smooth watercolor-like flow
+                        if (j === 0) ctx.moveTo(px, py);
+                        else {
                             const prevAngle = ((j - 1) / points) * Math.PI * 2;
-                            const midAngle = (prevAngle + angle) / 2;
-                            const midRadius = blobSize * (0.6 + noise(j * 0.3, i * 0.15, colorIndex) * 0.7);
-                            const cpx = x + Math.cos(midAngle) * midRadius;
-                            const cpy = y + Math.sin(midAngle) * midRadius;
-
+                            const cpAngle = (prevAngle + angle) / 2;
+                            const cpRadius = size * (0.5 + Math.random() * 0.7);
+                            const cpx = x + Math.cos(cpAngle) * cpRadius;
+                            const cpy = y + Math.sin(cpAngle) * cpRadius;
                             ctx.quadraticCurveTo(cpx, cpy, px, py);
                         }
                     }
                     ctx.closePath();
                     ctx.fill();
-
-                    // Add additional diffusion layer for watercolor effect
-                    if (Math.random() > 0.4) {
-                        const diffusionGradient = ctx.createRadialGradient(
-                            x + (Math.random() - 0.5) * blobSize * 0.3,
-                            y + (Math.random() - 0.5) * blobSize * 0.3,
-                            0,
-                            x,
-                            y,
-                            blobSize * 1.4
-                        );
-
-                        diffusionGradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.3)`);
-                        diffusionGradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.15)`);
-                        diffusionGradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
-
-                        ctx.fillStyle = diffusionGradient;
-                        ctx.beginPath();
-                        ctx.arc(x, y, blobSize * 1.4, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
-
-                    // Layered algorithm adds extra transparent layers
-                    if (algorithm === 'layered' && Math.random() > 0.5) {
-                        const layerGradient = ctx.createRadialGradient(x, y, 0, x, y, blobSize * 0.7);
-                        layerGradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.4)`);
-                        layerGradient.addColorStop(0.7, `rgba(${r}, ${g}, ${b}, 0.2)`);
-                        layerGradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
-
-                        ctx.fillStyle = layerGradient;
-                        ctx.beginPath();
-                        ctx.arc(x, y, blobSize * 0.7, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
                 }
             });
+
+            // Layer 3: Small detail shapes
+            if (algorithm === 'layered' || algorithm === 'dense') {
+                colorData.forEach((colorInfo) => {
+                    ctx.fillStyle = colorInfo.color;
+                    const percentageFactor = colorInfo.percentage / 100;
+                    const numSmall = Math.floor((width * height) / (patternSize * patternSize) * percentageFactor * densityMultiplier * 0.8);
+
+                    for (let i = 0; i < numSmall; i++) {
+                        const x = Math.random() * width;
+                        const y = Math.random() * height;
+                        const size = patternSize * (0.2 + Math.random() * 0.4);
+
+                        ctx.beginPath();
+                        const points = 4 + Math.floor(Math.random() * 4);
+                        for (let j = 0; j <= points; j++) {
+                            const angle = (j / points) * Math.PI * 2;
+                            const radius = size * (0.7 + Math.random() * 0.6);
+                            const px = x + Math.cos(angle) * radius;
+                            const py = y + Math.sin(angle) * radius;
+
+                            if (j === 0) ctx.moveTo(px, py);
+                            else ctx.lineTo(px, py);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                });
+            }
         }
 
         function generateMultiCamCryeCamo(colorData, algorithm) {
@@ -876,87 +988,6 @@
             }
 
             ctx.globalAlpha = 1.0;
-        }
-
-        function generateMultiTerrainBrushCamo(colorData, algorithm) {
-            const width = canvas.width;
-            const height = canvas.height;
-            const patternSize = parseInt(document.getElementById('patternSize').value);
-            const trailLength = parseInt(document.getElementById('trailLength').value) / 100;
-
-            let densityMultiplier = algorithm === 'dense' ? 2.0 : (algorithm === 'sparse' ? 0.6 : 1.2);
-
-            colorData.forEach((colorInfo, index) => {
-                ctx.strokeStyle = colorInfo.color;
-                ctx.fillStyle = colorInfo.color;
-                const percentageFactor = colorInfo.percentage / 100;
-                const numBrushes = Math.floor((width * height) / (patternSize * patternSize * 3) * percentageFactor * densityMultiplier);
-
-                for (let i = 0; i < numBrushes; i++) {
-                    let x, y;
-
-                    if (algorithm === 'noise') {
-                        x = noise(i * 0.2, index, 7) * width;
-                        y = noise(i * 0.2, index, 8) * height;
-                    } else {
-                        x = Math.random() * width;
-                        y = Math.random() * height;
-                    }
-
-                    const brushAngle = Math.random() * Math.PI * 2;
-                    const brushLength = patternSize * (2 + Math.random() * 3) * trailLength;
-                    const brushWidth = patternSize * (0.4 + Math.random() * 0.6);
-
-                    ctx.save();
-                    ctx.translate(x, y);
-                    ctx.rotate(brushAngle);
-
-                    const bristles = 8 + Math.floor(Math.random() * 8);
-
-                    for (let b = 0; b < bristles; b++) {
-                        const offsetY = (b / bristles - 0.5) * brushWidth;
-                        const lengthVar = 0.7 + Math.random() * 0.6;
-                        const curveVar = (Math.random() - 0.5) * brushWidth * 0.3;
-
-                        ctx.globalAlpha = 0.3 + Math.random() * 0.5;
-                        ctx.lineWidth = brushWidth / bristles * (1.5 + Math.random());
-                        ctx.lineCap = 'round';
-
-                        ctx.beginPath();
-                        ctx.moveTo(0, offsetY);
-
-                        const segments = 5;
-                        for (let s = 1; s <= segments; s++) {
-                            const progress = s / segments;
-                            const sx = progress * brushLength * lengthVar;
-                            const sy = offsetY + Math.sin(progress * Math.PI) * curveVar;
-                            ctx.lineTo(sx, sy);
-                        }
-
-                        ctx.stroke();
-                    }
-
-                    ctx.globalAlpha = 0.7;
-                    ctx.beginPath();
-                    ctx.ellipse(0, 0, brushWidth * 0.6, brushWidth * 0.4, 0, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    const numSplatters = Math.floor(Math.random() * 5);
-                    for (let sp = 0; sp < numSplatters; sp++) {
-                        const splatterPos = Math.random() * brushLength;
-                        const splatterOffset = (Math.random() - 0.5) * brushWidth * 1.5;
-                        const splatterSize = brushWidth * (0.1 + Math.random() * 0.2);
-
-                        ctx.globalAlpha = 0.6;
-                        ctx.beginPath();
-                        ctx.arc(splatterPos, splatterOffset, splatterSize, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
-
-                    ctx.globalAlpha = 1.0;
-                    ctx.restore();
-                }
-            });
         }
 
         function generateTreeLeafCamo(colorData, algorithm) {
