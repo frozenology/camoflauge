@@ -219,7 +219,7 @@
                     <div class="mb-3" id="curvyGroup">
                         <label class="form-label">Curvy: <span id="curvyValue">50</span>%</label>
                         <input type="range" class="form-range" id="curvy" min="0" max="100" value="50" oninput="document.getElementById('curvyValue').textContent = this.value">
-                        <small class="text-muted">0% = Angular/Sharp, 100% = Very Curvy/Smooth</small>
+                        <small class="text-muted">0% = Angular/Sharp, 100% = Liquid-Like/Very Round</small>
                     </div>
 
                     <!-- Camo Colors - Horizontal with Percentage -->
@@ -499,7 +499,7 @@
             document.getElementById('imageSpacingGroup').style.display = 
                 (style === 'image') ? 'block' : 'none';
             document.getElementById('curvyGroup').style.display = 
-                (style === 'organic' || style === 'multi-terrain') ? 'block' : 'none';
+                (style === 'organic' || style === 'multi-terrain' || style === 'multicam-crye') ? 'block' : 'none';
         });
 
         // Image upload handler
@@ -652,14 +652,20 @@
 
                     const blobSize = patternSize * sizeMultiplier * (0.7 + Math.random() * 0.8);
 
-                    ctx.beginPath();
-
-                    const numSegments = algorithm === 'spotted' ? 16 : (8 + Math.floor(Math.random() * 8));
+                    // Generate smooth liquid-like blob using more points for higher curvy values
+                    const basePoints = algorithm === 'spotted' ? 16 : 8;
+                    const numSegments = basePoints + Math.floor(curvyPercent * 12); // More points = smoother
                     const points = [];
 
+                    // Generate points with smoother variation for high curvy
                     for (let j = 0; j < numSegments; j++) {
                         const angle = (j / numSegments) * Math.PI * 2;
-                        const radiusVariation = 0.4 + noise(j * 0.8, i * 0.3, colorIndex) * 1.2;
+
+                        // Smoother radius variation for liquid effect
+                        const noiseValue1 = noise(j * 0.3, i * 0.2, colorIndex);
+                        const noiseValue2 = noise(j * 0.15, i * 0.1, colorIndex + 100);
+                        const radiusVariation = 0.6 + (noiseValue1 * 0.3 + noiseValue2 * 0.2) * (1 + curvyPercent * 0.5);
+
                         const radius = blobSize * radiusVariation;
 
                         points.push({
@@ -668,80 +674,317 @@
                         });
                     }
 
+                    ctx.beginPath();
                     ctx.moveTo(points[0].x, points[0].y);
 
-                    if (curvyPercent > 0.3) {
-                        // Curvy mode - use Bezier curves
-                        for (let j = 0; j < numSegments; j++) {
-                            const current = points[j];
-                            const next = points[(j + 1) % numSegments];
-                            const afterNext = points[(j + 2) % numSegments];
+                    // Draw with smooth Catmull-Rom-like curves for liquid effect
+                    for (let j = 0; j < numSegments; j++) {
+                        const p0 = points[(j - 1 + numSegments) % numSegments];
+                        const p1 = points[j];
+                        const p2 = points[(j + 1) % numSegments];
+                        const p3 = points[(j + 2) % numSegments];
 
-                            const randomness = blobSize * 0.2 * curvyPercent;
-                            const cp1x = current.x + (next.x - current.x) * 0.5 + (Math.random() - 0.5) * randomness;
-                            const cp1y = current.y + (next.y - current.y) * 0.5 + (Math.random() - 0.5) * randomness;
-                            const cp2x = next.x - (afterNext.x - current.x) * 0.15 * curvyPercent;
-                            const cp2y = next.y - (afterNext.y - current.y) * 0.15 * curvyPercent;
+                        if (curvyPercent > 0.5) {
+                            // High curvy: Ultra-smooth Catmull-Rom curves
+                            const tension = 0.5 * curvyPercent; // Smoothness factor
 
-                            ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, next.x, next.y);
-                        }
-                    } else {
-                        // Angular mode - use straight lines with slight smoothing
-                        for (let j = 0; j < numSegments; j++) {
-                            const current = points[j];
-                            const next = points[(j + 1) % numSegments];
+                            const cp1x = p1.x + (p2.x - p0.x) * tension;
+                            const cp1y = p1.y + (p2.y - p0.y) * tension;
+                            const cp2x = p2.x - (p3.x - p1.x) * tension;
+                            const cp2y = p2.y - (p3.y - p1.y) * tension;
 
-                            if (curvyPercent > 0) {
-                                // Slight curve with quadratic
-                                const midAngle = ((j + 0.5) / numSegments) * Math.PI * 2;
-                                const midRadius = blobSize * (0.5 + Math.random() * 0.5) * (1 - curvyPercent * 0.5);
-                                const cpx = x + Math.cos(midAngle) * midRadius;
-                                const cpy = y + Math.sin(midAngle) * midRadius;
-                                ctx.quadraticCurveTo(cpx, cpy, next.x, next.y);
-                            } else {
-                                // Pure angular - straight lines
-                                ctx.lineTo(next.x, next.y);
-                            }
+                            ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+                        } else if (curvyPercent > 0) {
+                            // Medium curvy: Quadratic curves
+                            const cpx = (p1.x + p2.x) / 2 + (Math.random() - 0.5) * blobSize * 0.1 * curvyPercent;
+                            const cpy = (p1.y + p2.y) / 2 + (Math.random() - 0.5) * blobSize * 0.1 * curvyPercent;
+                            ctx.quadraticCurveTo(cpx, cpy, p2.x, p2.y);
+                        } else {
+                            // Angular: Straight lines
+                            ctx.lineTo(p2.x, p2.y);
                         }
                     }
 
                     ctx.closePath();
                     ctx.fill();
 
+                    // Layered algorithm with liquid-like overlaps
                     if (algorithm === 'layered' && Math.random() > 0.5) {
                         const offsetX = x + (Math.random() - 0.5) * blobSize * 0.6;
                         const offsetY = y + (Math.random() - 0.5) * blobSize * 0.6;
                         const layerSize = blobSize * 0.7;
+                        const layerPoints = 6 + Math.floor(curvyPercent * 8);
 
-                        ctx.beginPath();
-                        const layerPoints = 6 + Math.floor(Math.random() * 6);
+                        const layerPointsArray = [];
                         for (let k = 0; k < layerPoints; k++) {
                             const angle = (k / layerPoints) * Math.PI * 2;
-                            const radius = layerSize * (0.6 + Math.random() * 0.8);
-                            const px = offsetX + Math.cos(angle) * radius;
-                            const py = offsetY + Math.sin(angle) * radius;
+                            const noiseVal = noise(k * 0.4, i * 0.3, colorIndex + 50);
+                            const radius = layerSize * (0.6 + noiseVal * 0.6);
 
-                            if (k === 0) {
-                                ctx.moveTo(px, py);
+                            layerPointsArray.push({
+                                x: offsetX + Math.cos(angle) * radius,
+                                y: offsetY + Math.sin(angle) * radius
+                            });
+                        }
+
+                        ctx.beginPath();
+                        ctx.moveTo(layerPointsArray[0].x, layerPointsArray[0].y);
+
+                        for (let k = 0; k < layerPoints; k++) {
+                            const lp0 = layerPointsArray[(k - 1 + layerPoints) % layerPoints];
+                            const lp1 = layerPointsArray[k];
+                            const lp2 = layerPointsArray[(k + 1) % layerPoints];
+                            const lp3 = layerPointsArray[(k + 2) % layerPoints];
+
+                            if (curvyPercent > 0.5) {
+                                const tension = 0.5 * curvyPercent;
+                                const cp1x = lp1.x + (lp2.x - lp0.x) * tension;
+                                const cp1y = lp1.y + (lp2.y - lp0.y) * tension;
+                                const cp2x = lp2.x - (lp3.x - lp1.x) * tension;
+                                const cp2y = lp2.y - (lp3.y - lp1.y) * tension;
+                                ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, lp2.x, lp2.y);
                             } else {
-                                const prevAngle = ((k - 1) / layerPoints) * Math.PI * 2;
-                                const cpAngle = (prevAngle + angle) / 2;
-                                const cpRadius = layerSize * (0.5 + Math.random() * 0.7);
-                                const cpx = offsetX + Math.cos(cpAngle) * cpRadius;
-                                const cpy = offsetY + Math.sin(cpAngle) * cpRadius;
-
-                                if (curvyPercent > 0.5) {
-                                    ctx.quadraticCurveTo(cpx, cpy, px, py);
-                                } else {
-                                    ctx.lineTo(px, py);
-                                }
+                                ctx.lineTo(lp2.x, lp2.y);
                             }
+                        }
+
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                }
+            });
+        }
+
+        function generateMultiCamCryeCamo(colorData, algorithm) {
+            const width = canvas.width;
+            const height = canvas.height;
+            const patternSize = parseInt(document.getElementById('patternSize').value);
+            const curvyPercent = parseInt(document.getElementById('curvy').value) / 100;
+
+            let densityMultiplier = 1.0;
+            switch(algorithm) {
+                case 'dense':
+                    densityMultiplier = 1.5;
+                    break;
+                case 'sparse':
+                    densityMultiplier = 0.6;
+                    break;
+                case 'layered':
+                    densityMultiplier = 1.3;
+                    break;
+            }
+
+            // Layer 1: Large irregular liquid-like base shapes
+            colorData.slice(0, 2).forEach((colorInfo, idx) => {
+                ctx.fillStyle = colorInfo.color;
+                ctx.globalAlpha = 0.8;
+
+                const numShapes = Math.floor((width * height) / (patternSize * patternSize * 8) * (colorInfo.percentage / 100) * densityMultiplier);
+
+                for (let i = 0; i < numShapes; i++) {
+                    let x, y;
+                    if (algorithm === 'noise') {
+                        x = noise(i * 0.08, idx, 10) * width;
+                        y = noise(i * 0.08, idx, 11) * height;
+                    } else {
+                        x = Math.random() * width;
+                        y = Math.random() * height;
+                    }
+
+                    const size = patternSize * (3 + Math.random() * 4);
+                    const angle = Math.random() * Math.PI * 2;
+
+                    ctx.save();
+                    ctx.translate(x, y);
+                    ctx.rotate(angle);
+
+                    // More points for smoother liquid shapes
+                    const points = 8 + Math.floor(curvyPercent * 8);
+                    const shapePoints = [];
+
+                    for (let j = 0; j < points; j++) {
+                        const a = (j / points) * Math.PI * 2;
+                        const noiseVal = noise(j * 0.3, i * 0.2, idx);
+                        const radiusX = size * (0.5 + noiseVal * 0.6);
+                        const radiusY = size * 0.4 * (0.5 + noiseVal * 0.5);
+
+                        shapePoints.push({
+                            x: Math.cos(a) * radiusX,
+                            y: Math.sin(a) * radiusY
+                        });
+                    }
+
+                    ctx.beginPath();
+                    ctx.moveTo(shapePoints[0].x, shapePoints[0].y);
+
+                    for (let j = 0; j < points; j++) {
+                        const p0 = shapePoints[(j - 1 + points) % points];
+                        const p1 = shapePoints[j];
+                        const p2 = shapePoints[(j + 1) % points];
+                        const p3 = shapePoints[(j + 2) % points];
+
+                        if (curvyPercent > 0.5) {
+                            const tension = 0.5 * curvyPercent;
+                            const cp1x = p1.x + (p2.x - p0.x) * tension;
+                            const cp1y = p1.y + (p2.y - p0.y) * tension;
+                            const cp2x = p2.x - (p3.x - p1.x) * tension;
+                            const cp2y = p2.y - (p3.y - p1.y) * tension;
+                            ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+                        } else {
+                            const midX = (p1.x + p2.x) / 2;
+                            const midY = (p1.y + p2.y) / 2;
+                            ctx.quadraticCurveTo(midX, midY, p2.x, p2.y);
+                        }
+                    }
+
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                }
+            });
+
+            ctx.globalAlpha = 1.0;
+
+            // Layer 2: Medium organic liquid blobs
+            colorData.slice(2, 4).forEach((colorInfo, idx) => {
+                ctx.fillStyle = colorInfo.color;
+
+                const numBlobs = Math.floor((width * height) / (patternSize * patternSize * 3) * (colorInfo.percentage / 100) * densityMultiplier);
+
+                for (let i = 0; i < numBlobs; i++) {
+                    let x, y;
+                    if (algorithm === 'noise') {
+                        x = noise(i * 0.12, idx + 2, 12) * width;
+                        y = noise(i * 0.12, idx + 2, 13) * height;
+                    } else {
+                        x = Math.random() * width;
+                        y = Math.random() * height;
+                    }
+
+                    const size = patternSize * (1.2 + Math.random() * 1.8);
+                    const points = 7 + Math.floor(curvyPercent * 6);
+                    const blobPoints = [];
+
+                    for (let j = 0; j < points; j++) {
+                        const angle = (j / points) * Math.PI * 2;
+                        const noiseVal = noise(j * 0.4, i * 0.25, idx + 2);
+                        const radius = size * (0.5 + noiseVal * 0.8);
+
+                        blobPoints.push({
+                            x: x + Math.cos(angle) * radius,
+                            y: y + Math.sin(angle) * radius
+                        });
+                    }
+
+                    ctx.beginPath();
+                    ctx.moveTo(blobPoints[0].x, blobPoints[0].y);
+
+                    for (let j = 0; j < points; j++) {
+                        const p0 = blobPoints[(j - 1 + points) % points];
+                        const p1 = blobPoints[j];
+                        const p2 = blobPoints[(j + 1) % points];
+                        const p3 = blobPoints[(j + 2) % points];
+
+                        if (curvyPercent > 0.5) {
+                            const tension = 0.5 * curvyPercent;
+                            const cp1x = p1.x + (p2.x - p0.x) * tension;
+                            const cp1y = p1.y + (p2.y - p0.y) * tension;
+                            const cp2x = p2.x - (p3.x - p1.x) * tension;
+                            const cp2y = p2.y - (p3.y - p1.y) * tension;
+                            ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+                        } else {
+                            const midX = (p1.x + p2.x) / 2;
+                            const midY = (p1.y + p2.y) / 2;
+                            ctx.quadraticCurveTo(midX, midY, p2.x, p2.y);
+                        }
+                    }
+
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Add small detail dots with smooth edges
+                    if (Math.random() > 0.5) {
+                        ctx.globalAlpha = 0.6;
+                        const numDots = 3 + Math.floor(Math.random() * 5);
+                        for (let d = 0; d < numDots; d++) {
+                            const dotAngle = Math.random() * Math.PI * 2;
+                            const dotDist = size * (0.8 + Math.random() * 0.4);
+                            const dotSize = size * (0.1 + Math.random() * 0.15);
+
+                            ctx.beginPath();
+                            ctx.arc(
+                                x + Math.cos(dotAngle) * dotDist,
+                                y + Math.sin(dotAngle) * dotDist,
+                                dotSize,
+                                0, Math.PI * 2
+                            );
+                            ctx.fill();
+                        }
+                        ctx.globalAlpha = 1.0;
+                    }
+                }
+            });
+
+            // Layer 3: Small detailed round spots
+            const detailColors = colorData.length > 4 ? colorData.slice(4) : colorData.slice(0, 2);
+
+            detailColors.forEach((colorInfo, idx) => {
+                ctx.fillStyle = colorInfo.color;
+
+                const numSpots = Math.floor((width * height) / (patternSize * patternSize * 1.5) * (colorInfo.percentage / 100) * densityMultiplier * 1.5);
+
+                for (let i = 0; i < numSpots; i++) {
+                    const x = Math.random() * width;
+                    const y = Math.random() * height;
+                    const size = patternSize * (0.15 + Math.random() * 0.35);
+
+                    ctx.globalAlpha = 0.7 + Math.random() * 0.3;
+
+                    // More round spots for high curvy
+                    if (curvyPercent > 0.5 || Math.random() > 0.5) {
+                        ctx.beginPath();
+                        ctx.arc(x, y, size, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else {
+                        ctx.beginPath();
+                        const points = 5 + Math.floor(Math.random() * 3);
+                        for (let j = 0; j < points; j++) {
+                            const angle = (j / points) * Math.PI * 2;
+                            const radius = size * (0.7 + Math.random() * 0.6);
+                            const px = x + Math.cos(angle) * radius;
+                            const py = y + Math.sin(angle) * radius;
+
+                            if (j === 0) ctx.moveTo(px, py);
+                            else ctx.lineTo(px, py);
                         }
                         ctx.closePath();
                         ctx.fill();
                     }
                 }
             });
+
+            ctx.globalAlpha = 1.0;
+
+            // Layer 4: Fine texture overlay with soft edges
+            if (algorithm === 'layered' || algorithm === 'dense') {
+                colorData.forEach(colorInfo => {
+                    ctx.fillStyle = colorInfo.color;
+                    const numSpecks = Math.floor((width * height) / (patternSize * patternSize * 0.5));
+
+                    for (let i = 0; i < numSpecks; i++) {
+                        const x = Math.random() * width;
+                        const y = Math.random() * height;
+                        const size = patternSize * (0.03 + Math.random() * 0.08);
+
+                        ctx.globalAlpha = 0.3 + Math.random() * 0.4;
+                        ctx.beginPath();
+                        ctx.arc(x, y, size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+            }
+
+            ctx.globalAlpha = 1.0;
         }
 
         function generateMultiTerrainCamo(colorData, algorithm) {
@@ -905,201 +1148,6 @@
                     }
                 });
             }
-        }
-
-        function generateMultiCamCryeCamo(colorData, algorithm) {
-            const width = canvas.width;
-            const height = canvas.height;
-            const patternSize = parseInt(document.getElementById('patternSize').value);
-
-            let densityMultiplier = 1.0;
-            switch(algorithm) {
-                case 'dense':
-                    densityMultiplier = 1.5;
-                    break;
-                case 'sparse':
-                    densityMultiplier = 0.6;
-                    break;
-                case 'layered':
-                    densityMultiplier = 1.3;
-                    break;
-            }
-
-            // Layer 1: Large irregular base shapes
-            colorData.slice(0, 2).forEach((colorInfo, idx) => {
-                ctx.fillStyle = colorInfo.color;
-                ctx.globalAlpha = 0.8;
-
-                const numShapes = Math.floor((width * height) / (patternSize * patternSize * 8) * (colorInfo.percentage / 100) * densityMultiplier);
-
-                for (let i = 0; i < numShapes; i++) {
-                    let x, y;
-                    if (algorithm === 'noise') {
-                        x = noise(i * 0.08, idx, 10) * width;
-                        y = noise(i * 0.08, idx, 11) * height;
-                    } else {
-                        x = Math.random() * width;
-                        y = Math.random() * height;
-                    }
-
-                    const size = patternSize * (3 + Math.random() * 4);
-                    const angle = Math.random() * Math.PI * 2;
-
-                    ctx.save();
-                    ctx.translate(x, y);
-                    ctx.rotate(angle);
-
-                    ctx.beginPath();
-                    const points = 6;
-                    for (let j = 0; j < points; j++) {
-                        const a = (j / points) * Math.PI * 2;
-                        const nextA = ((j + 1) / points) * Math.PI * 2;
-                        const midA = (a + nextA) / 2;
-
-                        const radiusX = size * (0.6 + Math.random() * 0.4);
-                        const radiusY = size * 0.4 * (0.6 + Math.random() * 0.4);
-
-                        const px = Math.cos(a) * radiusX;
-                        const py = Math.sin(a) * radiusY;
-                        const cpx = Math.cos(midA) * radiusX * 1.2;
-                        const cpy = Math.sin(midA) * radiusY * 1.2;
-                        const npx = Math.cos(nextA) * radiusX;
-                        const npy = Math.sin(nextA) * radiusY;
-
-                        if (j === 0) ctx.moveTo(px, py);
-                        ctx.quadraticCurveTo(cpx, cpy, npx, npy);
-                    }
-                    ctx.closePath();
-                    ctx.fill();
-
-                    ctx.restore();
-                }
-            });
-
-            ctx.globalAlpha = 1.0;
-
-            // Layer 2: Medium organic blobs
-            colorData.slice(2, 4).forEach((colorInfo, idx) => {
-                ctx.fillStyle = colorInfo.color;
-
-                const numBlobs = Math.floor((width * height) / (patternSize * patternSize * 3) * (colorInfo.percentage / 100) * densityMultiplier);
-
-                for (let i = 0; i < numBlobs; i++) {
-                    let x, y;
-                    if (algorithm === 'noise') {
-                        x = noise(i * 0.12, idx + 2, 12) * width;
-                        y = noise(i * 0.12, idx + 2, 13) * height;
-                    } else {
-                        x = Math.random() * width;
-                        y = Math.random() * height;
-                    }
-
-                    const size = patternSize * (1.2 + Math.random() * 1.8);
-
-                    ctx.beginPath();
-                    const points = 7 + Math.floor(Math.random() * 3);
-                    for (let j = 0; j < points; j++) {
-                        const angle = (j / points) * Math.PI * 2;
-                        const nextAngle = ((j + 1) / points) * Math.PI * 2;
-                        const midAngle = (angle + nextAngle) / 2;
-
-                        const radius = size * (0.6 + Math.random() * 0.7);
-                        const midRadius = size * (0.5 + Math.random() * 0.6);
-
-                        const px = x + Math.cos(angle) * radius;
-                        const py = y + Math.sin(angle) * radius;
-                        const cpx = x + Math.cos(midAngle) * midRadius;
-                        const cpy = y + Math.sin(midAngle) * midRadius;
-                        const npx = x + Math.cos(nextAngle) * radius;
-                        const npy = y + Math.sin(nextAngle) * radius;
-
-                        if (j === 0) ctx.moveTo(px, py);
-                        ctx.quadraticCurveTo(cpx, cpy, npx, npy);
-                    }
-                    ctx.closePath();
-                    ctx.fill();
-
-                    if (Math.random() > 0.5) {
-                        ctx.globalAlpha = 0.6;
-                        const numDots = 3 + Math.floor(Math.random() * 5);
-                        for (let d = 0; d < numDots; d++) {
-                            const dotAngle = Math.random() * Math.PI * 2;
-                            const dotDist = size * (0.8 + Math.random() * 0.4);
-                            const dotSize = size * (0.1 + Math.random() * 0.15);
-
-                            ctx.beginPath();
-                            ctx.arc(
-                                x + Math.cos(dotAngle) * dotDist,
-                                y + Math.sin(dotAngle) * dotDist,
-                                dotSize,
-                                0, Math.PI * 2
-                            );
-                            ctx.fill();
-                        }
-                        ctx.globalAlpha = 1.0;
-                    }
-                }
-            });
-
-            // Layer 3: Small detailed spots
-            const detailColors = colorData.length > 4 ? colorData.slice(4) : colorData.slice(0, 2);
-
-            detailColors.forEach((colorInfo, idx) => {
-                ctx.fillStyle = colorInfo.color;
-
-                const numSpots = Math.floor((width * height) / (patternSize * patternSize * 1.5) * (colorInfo.percentage / 100) * densityMultiplier * 1.5);
-
-                for (let i = 0; i < numSpots; i++) {
-                    const x = Math.random() * width;
-                    const y = Math.random() * height;
-                    const size = patternSize * (0.15 + Math.random() * 0.35);
-
-                    ctx.globalAlpha = 0.7 + Math.random() * 0.3;
-
-                    if (Math.random() > 0.3) {
-                        ctx.beginPath();
-                        const points = 5 + Math.floor(Math.random() * 3);
-                        for (let j = 0; j < points; j++) {
-                            const angle = (j / points) * Math.PI * 2;
-                            const radius = size * (0.7 + Math.random() * 0.6);
-                            const px = x + Math.cos(angle) * radius;
-                            const py = y + Math.sin(angle) * radius;
-
-                            if (j === 0) ctx.moveTo(px, py);
-                            else ctx.lineTo(px, py);
-                        }
-                        ctx.closePath();
-                        ctx.fill();
-                    } else {
-                        ctx.beginPath();
-                        ctx.arc(x, y, size, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
-                }
-            });
-
-            ctx.globalAlpha = 1.0;
-
-            // Layer 4: Fine texture overlay
-            if (algorithm === 'layered' || algorithm === 'dense') {
-                colorData.forEach(colorInfo => {
-                    ctx.fillStyle = colorInfo.color;
-                    const numSpecks = Math.floor((width * height) / (patternSize * patternSize * 0.5));
-
-                    for (let i = 0; i < numSpecks; i++) {
-                        const x = Math.random() * width;
-                        const y = Math.random() * height;
-                        const size = patternSize * (0.03 + Math.random() * 0.08);
-
-                        ctx.globalAlpha = 0.3 + Math.random() * 0.4;
-                        ctx.beginPath();
-                        ctx.arc(x, y, size, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
-                });
-            }
-
-            ctx.globalAlpha = 1.0;
         }
 
         function generateTreeLeafCamo(colorData, algorithm) {
